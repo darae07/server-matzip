@@ -11,10 +11,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+import environ
+root = environ.Path(__file__)
+env = environ.Env(DEBUG=(bool, False),)
 
+SITE_ROOT = root()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -74,16 +78,29 @@ WSGI_APPLICATION = 'matzip.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'placebook',
-        'USER': 'root',
-        'PASSWORD': '12341234',
-        'HOST': 'localhost',
-        'PORT': '5432',
+if env('DJANGO_DB_HOST'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': env('DJANGO_DB_NAME'),
+            'USER': env('DJANGO_DB_USERNAME'),
+            'PASSWORD': env('DJANGO_DB_PASSWORD'),
+            'HOST': env('DJANGO_DB_HOST'),
+            'PORT': env('DJANGO_DB_PORT'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'placebook',
+            'USER': 'root',
+            'PASSWORD': '1234',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+
 
 
 # Password validation
