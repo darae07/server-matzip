@@ -1,0 +1,7 @@
+{% if store_list %}
+<ul>
+    {% for store in store_list %}
+    <li>{{store.name}}</li>
+    {% endfor %}
+</ul>
+{% endif %}

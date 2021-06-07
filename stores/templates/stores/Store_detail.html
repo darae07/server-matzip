@@ -1,0 +1,7 @@
+{% if store %}
+<ul>
+    {% for menu in store.menu_set.all %}
+    <li>{{menu.menu_name}}: {{menu.price}}원</li>
+    {% endfor %}
+</ul>
+{% endif %}
