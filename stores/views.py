@@ -2,12 +2,14 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Store, Dong, Menu, Category
 from django.views import generic
+from rest_framework import viewsets
+from .serializer import StoreSerializer
 
 
 # Create your views here.
-class StoreList(generic.ListView):
-    def get_queryset(self):
-        return Store.objects.order_by('id')
+class StoreViewSet(viewsets.ModelViewSet):
+    queryset = Store.objects.all()
+    serializer_class = StoreSerializer
 
 
 def index(request):
