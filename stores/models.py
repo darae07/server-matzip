@@ -29,7 +29,7 @@ class Store(models.Model):
 
 
 class Menu(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    store = models.ForeignKey(Store, related_name='menus', on_delete=models.CASCADE)
     menu_name = models.CharField(max_length=100)
     price = models.IntegerField()
     image = models.ImageField(upload_to='stores/menu', default='')
