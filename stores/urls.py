@@ -6,9 +6,9 @@ from rest_framework import routers
 from stores.views import StoreViewSet, DongViewSet, CategoryViewSet
 
 router = routers.DefaultRouter()
-router.register(r'stores', StoreViewSet)
-router.register(r'dongs', DongViewSet)
-router.register(r'categories', CategoryViewSet)
+router.register(r'store', StoreViewSet)
+router.register(r'dong', DongViewSet)
+router.register(r'category', CategoryViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
