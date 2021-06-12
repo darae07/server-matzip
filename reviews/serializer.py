@@ -5,22 +5,29 @@ from .models import Review, ReviewImage, Comment
 
 
 class ReviewImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ReviewImage
-        fields = ['image']
+        fields = ['image_url']
+
+    def get_image_url(self, queryset):
+        request = self.context.get('request')
+        image_url = queryset.image.url
+        return request.build_absolute_uri(image_url)
 
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['store_id', 'title', 'content', 'created_at', 'modified_at']
+        fields = '__all__'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    images = serializers.StringRelatedField(many=True)
-    comments = serializers.StringRelatedField(many=True)
+    images = ReviewImageSerializer(read_only=True, many=True)
+    comments = CommentSerializer(read_only=True, many=True)
 
     class Meta:
         model = Review
-        fields = ['store_id', 'title', 'content', 'created_at', 'images', 'comments']
-        extra_kwargs = {'token': {'write_only': True}}
+        fields = '__all__'
+
