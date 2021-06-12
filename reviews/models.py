@@ -10,6 +10,9 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+    def __str__(self):
+        return self.title
+
 
 class ReviewImage(models.Model):
     image = models.ImageField(upload_to='reviews/review', default='')
@@ -22,3 +25,5 @@ class Comment(models.Model):
     parent_post = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='comments')
     parent_comment = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
+    def __str__(self):
+        return self.content
