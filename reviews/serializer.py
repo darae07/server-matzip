@@ -16,29 +16,11 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['store_id', 'title', 'content', 'created_at', 'modified_at']
 
 
-class ReplyField(serializers.PrimaryKeyRelatedField):
-    def to_representation(self, value):
-        id = super(ReplyField, self).to_representation(value)
-        try:
-            replies = Comment.objects.filter(parent_post=id)
-            serializer = CommentSerializer(replies)
-            return serializer.data
-        except Comment.DoseNotExist:
-            return None
-
-    def get_replies(self, cutoff=None):
-        queryset = self.get_queryset()
-        if queryset is None:
-            return {}
-
-        return OrderedDict([(item.id, self.display_value(item)) for item in queryset])
-
-
 class ReviewSerializer(serializers.ModelSerializer):
     images = serializers.StringRelatedField(many=True)
-    reply = ReplyField(queryset=Comment.objects.all())
+    comments = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Review
-        fields = ['store_id', 'title', 'content', 'image', 'created_at', 'modified_at']
+        fields = ['store_id', 'title', 'content', 'created_at', 'images', 'comments']
         extra_kwargs = {'token': {'write_only': True}}
