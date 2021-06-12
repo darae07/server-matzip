@@ -29,6 +29,8 @@ class MenuSerializer(serializers.ModelSerializer):
 
 class StoreSerializer(serializers.ModelSerializer):
     menus = MenuSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
+    dong = DongSerializer(read_only=True)
 
     class Meta:
         model = Store
