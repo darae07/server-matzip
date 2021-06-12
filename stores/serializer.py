@@ -2,24 +2,16 @@ from rest_framework import serializers
 from .models import Store, Dong, Category, Menu
 
 
-class StoreSerializer(serializers.ModelSerializer):
-    menus = serializers.StringRelatedField(many=True)
-
-    class Meta:
-        model = Store
-        fields = ('name', 'dong', 'category', 'menus')
-
-
 class DongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dong
-        fields = ['name']
+        fields = '__all__'
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['name']
+        fields = '__all__'
 
 
 class MenuSerializer(serializers.ModelSerializer):
@@ -33,3 +25,11 @@ class MenuSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         image_url = queryset.image.url
         return request.build_absolute_uri(image_url)
+
+
+class StoreSerializer(serializers.ModelSerializer):
+    menus = MenuSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Store
+        fields = '__all__'
