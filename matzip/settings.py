@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'stores.apps.StoresConfig',
     'reviews.apps.ReviewsConfig',
     'common.apps.CommonConfig',
-    'rest_framework'
+    'rest_framework',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
