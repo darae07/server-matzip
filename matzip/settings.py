@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'reviews.apps.ReviewsConfig',
     'common.apps.CommonConfig',
     'rest_framework',
-    'rest_framework.authtoken',
     'knox'
 ]
 
@@ -164,8 +163,5 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         "knox.auth.TokenAuthentication",
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
     ]
 }
