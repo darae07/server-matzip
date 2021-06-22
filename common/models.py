@@ -7,7 +7,8 @@ from django.contrib.auth.models import User, AbstractUser
 
 
 class CommonUser(AbstractUser):
-    medium = models.CharField(default="medium", max_length=100)
+    nickname = models.CharField(max_length=100, null=True, blank=True)
+    greetings = models.CharField(max_length=400, null=True, blank=True)
 
 
 # @receiver(post_save, sender=User)

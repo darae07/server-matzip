@@ -213,3 +213,6 @@ JWT_AUTH_COOKIE = 'my-app-auth'
 JWT_AUTH_REFRESH_COOKIE = 'my-refresh-token'
 
 AUTH_USER_MODEL = 'common.CommonUser'
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'common.serializers.LoginSerializer',
+}
