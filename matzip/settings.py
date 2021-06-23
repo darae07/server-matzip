@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'stores.apps.StoresConfig',
     'reviews.apps.ReviewsConfig',
     'common.apps.CommonConfig',
+    'group.apps.GroupConfig',
     'rest_framework',
     'knox',
     'rest_framework_simplejwt.token_blacklist',
