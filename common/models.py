@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User, AbstractUser
+from group.models import Company
 
 
 class CommonUser(AbstractUser):
@@ -12,13 +13,4 @@ class CommonUser(AbstractUser):
     image = models.ImageField(upload_to='users', default='', null=True, blank=True)
     status = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=50, null=True, blank=True)
-
-# @receiver(post_save, sender=User)
-# def create_user_profile(sender, instance, created, **kwargs):
-#     if created:
-#         Profile.objects.create(user=instance, user_pk=instance.id)
-#
-#
-# @receiver(post_save, sender=User)
-# def save_user_profile(sender, instance, **kwargs):
-#     instance.profile.save()
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
