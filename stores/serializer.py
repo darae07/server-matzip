@@ -13,7 +13,7 @@ class MenuSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Menu
-        fields = ['menu_name', 'price', 'image_url']
+        fields = ['menu_name', 'price', 'image_url', 'id']
 
     def get_image_url(self, queryset):
         request = self.context.get('request')

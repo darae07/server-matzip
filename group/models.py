@@ -14,8 +14,10 @@ class Company(models.Model):
 
 
 class Contract(models.Model):
-    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True, related_name='user')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name='members')
+    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
+                             related_name='user')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='members')
     date_joined = models.DateField(auto_now_add=True, blank=True)
     team_name = models.CharField(max_length=100, null=True, blank=True)
 
@@ -25,8 +27,8 @@ class Contract(models.Model):
 
 class Party(models.Model):
     name = models.CharField(max_length=100)
-    members = models.ManyToManyField('common.CommonUser', through='Membership')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
+    members = models.ManyToManyField('common.CommonUser', through='Membership', related_name='membership_users')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
     description = models.CharField(max_length=500, null=True, blank=True)
 
     def __str__(self):
@@ -34,13 +36,17 @@ class Party(models.Model):
 
 
 class Vote(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE, null=True, blank=True)
-    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, null=True, blank=True)
-    party = models.ForeignKey(Party, on_delete=models.CASCADE)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, null=True, blank=True, related_name='store')
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, null=True, blank=True, related_name='menu')
+    party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='votes')
+
+    def __str__(self):
+        return self.store.name
 
 
 class Membership(models.Model):
-    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
+                             related_name='membership')
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     date_joined = models.DateField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)

@@ -1,8 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Company, Contract
+from .models import Company, Contract, Vote, Party, Membership
 from rest_framework import viewsets, permissions
-from .serializer import CompanySerializer, CompanyMemberSerializer
+from .serializer import CompanySerializer, CompanyMemberSerializer, VoteSerializer, PartySerializer, MembershipSerializer
 from common.models import CommonUser
 from rest_framework.decorators import api_view, permission_classes
 
@@ -42,3 +42,17 @@ def my_company_member(request):
 #             return Response(serializer.data)
 #         except Contract.DoseNotExist:
 #             return Response('user`s company is not defined')
+
+class VoteViewSet(viewsets.ModelViewSet):
+    queryset = Vote.objects.all()
+    serializer_class = VoteSerializer
+
+
+class PartyViewSet(viewsets.ModelViewSet):
+    queryset = Party.objects.all()
+    serializer_class = PartySerializer
+
+
+class MembershipViewSet(viewsets.ModelViewSet):
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializer
