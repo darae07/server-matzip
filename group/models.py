@@ -27,7 +27,7 @@ class Contract(models.Model):
 
 class Party(models.Model):
     name = models.CharField(max_length=100)
-    members = models.ManyToManyField('common.CommonUser', through='Membership', related_name='membership_users')
+    members = models.ManyToManyField('common.CommonUser', through='Membership')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
     description = models.CharField(max_length=500, null=True, blank=True)
 
@@ -45,8 +45,7 @@ class Vote(models.Model):
 
 
 class Membership(models.Model):
-    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
-                             related_name='membership')
+    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     date_joined = models.DateField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
