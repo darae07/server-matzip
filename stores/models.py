@@ -1,13 +1,6 @@
 from django.db import models
 
 
-class Dong(models.Model):
-    name = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
-
-
 class Category(models.Model):
     name = models.CharField(max_length=50, default='')
 
@@ -18,11 +11,12 @@ class Category(models.Model):
 # Create your models here.
 class Store(models.Model):
     name = models.CharField(max_length=100)
-    dong = models.ForeignKey(Dong, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-
-    # lon = models.IntegerField()
-    # lat = models.IntegerField()
+    lat = models.FloatField(null=True, blank=True)
+    lon = models.FloatField(null=True, blank=True)
+    tel = models.CharField(max_length=50, null=True, blank=True)
+    open_time = models.TimeField(null=True, blank=True)
+    close_time = models.TimeField(null=True, blank=True)
 
     def __str__(self):
         return self.name

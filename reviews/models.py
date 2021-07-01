@@ -1,10 +1,12 @@
 from django.db import models
 from stores.models import Store
+from common.models import CommonUser
 
 
 # Create your models here.
 class Review(models.Model):
     store_id = models.ForeignKey(Store, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=300)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -20,6 +22,7 @@ class ReviewImage(models.Model):
 
 
 class Comment(models.Model):
+    user_id = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     parent_post = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='comments')

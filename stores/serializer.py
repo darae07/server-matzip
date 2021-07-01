@@ -1,11 +1,5 @@
 from rest_framework import serializers
-from .models import Store, Dong, Category, Menu
-
-
-class DongSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Dong
-        fields = '__all__'
+from .models import Store, Category, Menu
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -30,7 +24,6 @@ class MenuSerializer(serializers.ModelSerializer):
 class StoreSerializer(serializers.ModelSerializer):
     menus = MenuSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    dong = DongSerializer(read_only=True)
 
     class Meta:
         model = Store
