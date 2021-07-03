@@ -2,7 +2,7 @@ from .models import Company, Contract
 from rest_framework import serializers
 from common.models import CommonUser
 from common.serializers import UserSerializer
-from .models import Vote, Party, Membership
+from .models import Vote, Party, Membership, Invite
 from stores.serializer import StoreSerializer, MenuSerializer
 
 
@@ -52,4 +52,11 @@ class PartySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Party
+        fields = '__all__'
+
+
+class InviteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Invite
         fields = '__all__'
