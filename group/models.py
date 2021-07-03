@@ -46,7 +46,7 @@ class Vote(models.Model):
 
 class Membership(models.Model):
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
-    party = models.ForeignKey(Party, on_delete=models.CASCADE)
+    party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='membership')
     date_joined = models.DateField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
     vote = models.ForeignKey(Vote, on_delete=models.CASCADE, null=True, blank=True)

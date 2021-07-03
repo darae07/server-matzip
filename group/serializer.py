@@ -48,7 +48,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 class PartySerializer(serializers.ModelSerializer):
     votes = VoteSerializer(read_only=True, many=True)
     company = CompanySerializer(read_only=True, many=False)
-    members = UserSerializer(read_only=True, many=True)
+    membership = MembershipSerializer(read_only=True, many=True)
 
     class Meta:
         model = Party
