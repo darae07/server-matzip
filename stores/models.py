@@ -26,7 +26,7 @@ class Menu(models.Model):
     store = models.ForeignKey(Store, related_name='menus', on_delete=models.CASCADE)
     menu_name = models.CharField(max_length=100)
     price = models.IntegerField()
-    image = models.ImageField(upload_to='stores/menu', default='')
+    image = models.ImageField(upload_to='stores/menu', default='', null=True, blank=True)
 
     def __str__(self):
         return self.menu_name

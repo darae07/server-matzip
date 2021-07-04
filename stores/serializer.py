@@ -17,8 +17,10 @@ class MenuSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, queryset):
         request = self.context.get('request')
-        image_url = queryset.image.url
-        return request.build_absolute_uri(image_url)
+        if queryset.image:
+            image_url = queryset.image.url
+            return request.build_absolute_uri(image_url)
+        return None
 
 
 class StoreSerializer(serializers.ModelSerializer):
