@@ -14,8 +14,8 @@ class Company(models.Model):
 
 
 class Contract(models.Model):
-    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
-                             related_name='user')
+    user = models.OneToOneField('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='user')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True,
                                 related_name='members')
     date_joined = models.DateField(auto_now_add=True, blank=True)
@@ -56,13 +56,12 @@ class Membership(models.Model):
 
 
 class Invite(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True,)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, )
     sender = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
                                related_name='sender')
-    receiver = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
-                                 related_name='receiver')
+    receiver = models.OneToOneField('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
+                                    related_name='receiver', unique=True)
     date_invited = models.DateField(auto_now_add=True, blank=True)
 
     def __str__(self):
         return self.receiver.username
-
