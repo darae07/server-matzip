@@ -63,3 +63,13 @@ class InviteViewSet(viewsets.ModelViewSet):
     queryset = Invite.objects.all()
     serializer_class = InviteSerializer
 
+
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny,))
+def my_invite(request):
+    user_id = request.user.id
+    invite = Invite.objects.filter(receiver=user_id).first()
+    if not invite:
+        return Response('isn`t exist invitation')
+    serializer = InviteSerializer(invite)
+    return Response(serializer.data)
