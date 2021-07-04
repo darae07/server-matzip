@@ -2,7 +2,7 @@ from django.urls import path
 from django.conf.urls import include
 from rest_framework import routers
 from .views import CompanyViewSet, CompanyMemberViewSet, my_company_member, PartyViewSet, \
-    VoteViewSet, MembershipViewSet, InviteViewSet, my_invite
+    VoteViewSet, MembershipViewSet, InviteViewSet, my_invite, voting
 
 router = routers.DefaultRouter()
 router.register(r'company', CompanyViewSet)
@@ -16,4 +16,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('my-company-member', my_company_member),
     path('my-invite', my_invite),
+    path('voting', voting),
 ]

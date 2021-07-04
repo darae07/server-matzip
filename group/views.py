@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Company, Contract, Vote, Party, Membership, Invite
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from .serializer import CompanySerializer, CompanyMemberSerializer, VoteSerializer, PartySerializer, \
     MembershipSerializer, InviteSerializer
 from common.models import CommonUser
@@ -70,6 +70,24 @@ def my_invite(request):
     user_id = request.user.id
     invite = Invite.objects.filter(receiver=user_id).first()
     if not invite:
-        return Response('isn`t exist invitation')
+        return Response('isn`t exist invitation', status=406)
     serializer = InviteSerializer(invite)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes((permissions.AllowAny,))
+def voting(request):
+    print(request.method)
+    if request.method == 'POST':
+        user_id = request.user.id
+        membership = Membership.objects.filter(user=user_id, party=request.data['party']).first()
+        if not membership:
+            return Response('isn`t exist membership', status=406)
+        serializer = MembershipSerializer(membership.update(vote=request.data['vote']))
+        if serializer.is_valid():
+            membership.set_vote(serializer.validated_data['vote'])
+            membership.save()
+            return Response(serializer.data, status=200)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
