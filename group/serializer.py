@@ -56,7 +56,9 @@ class PartySerializer(serializers.ModelSerializer):
 
 
 class InviteSerializer(serializers.ModelSerializer):
-
+    company = CompanySerializer(read_only=True, many=False)
+    sender = UserSerializer(read_only=True, many=False)
+    
     class Meta:
         model = Invite
         fields = '__all__'
