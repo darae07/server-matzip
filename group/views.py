@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Company, Contract, Vote, Party, Membership, Invite
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from .serializer import CompanySerializer, CompanyMemberSerializer, VoteSerializer, PartySerializer, \
     MembershipSerializer, InviteSerializer
 from common.models import CommonUser
@@ -73,6 +73,14 @@ def my_invite(request):
         return Response('isn`t exist invitation', status=406)
     serializer = InviteSerializer(invite)
     return Response(serializer.data)
+
+
+class MyInvitedParty(generics.ListAPIView):
+    serializer_class = MembershipSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Membership.objects.filter(user=user)
 
 
 @api_view(['POST'])
