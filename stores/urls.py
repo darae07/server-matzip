@@ -3,7 +3,7 @@ from . import views
 from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework import routers
-from stores.views import StoreViewSet, CategoryViewSet
+from stores.views import StoreViewSet, CategoryViewSet, near_my_company
 
 router = routers.DefaultRouter()
 router.register(r'store', StoreViewSet)
@@ -11,4 +11,5 @@ router.register(r'category', CategoryViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('near-my-company', near_my_company),
 ]
