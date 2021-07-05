@@ -15,6 +15,19 @@ class StoreViewSet(viewsets.ModelViewSet):
     filter_backends = [SearchFilter]
     search_fields = 'name'
 
+    def get_queryset(self):
+        queryset = Store.objects.all()
+        name = self.request.query_params.get('name')
+        category = self.request.query_params.get('category')
+        dong = self.request.query_params.get('dong')
+        if name is not None:
+            queryset = queryset.filter(name__contains=name)
+        if category is not None:
+            queryset = queryset.filter(category=category)
+        if dong is not None:
+            queryset = queryset.filter(location__contains=dong)
+        return queryset
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
