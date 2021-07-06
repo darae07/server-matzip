@@ -18,6 +18,7 @@ class Store(models.Model):
     tel = models.CharField(max_length=50, null=True, blank=True)
     open_time = models.TimeField(null=True, blank=True)
     close_time = models.TimeField(null=True, blank=True)
+    distance = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.name

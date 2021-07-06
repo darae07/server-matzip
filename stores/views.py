@@ -22,12 +22,27 @@ class StoreViewSet(viewsets.ModelViewSet):
         name = self.request.query_params.get('name')
         category = self.request.query_params.get('category')
         dong = self.request.query_params.get('dong')
+        lat = self.request.query_params.get('lat')
+        lon = self.request.query_params.get('lon')
         if name is not None:
             queryset = queryset.filter(name__contains=name)
         if category is not None:
             queryset = queryset.filter(category=category)
         if dong is not None:
             queryset = queryset.filter(location__contains=dong)
+        if lat is not None and lon is not None:
+            lat, lon = float(lat), float(lon)
+            position = (lat, lon)
+
+            condition = (
+                    Q(lat__range=(lat - 0.005, lat + 0.005)) |
+                    Q(lon__range=(lon - 0.007, lon + 0.007))
+            )
+            queryset = queryset.filter(condition)
+
+            near_store_ids = [store.id for store in queryset
+                              if haversine(position, (store.lat, store.lon)) <= 2]
+            queryset = queryset.filter(id__in=near_store_ids)
         return queryset
 
 
@@ -51,6 +66,8 @@ def near_my_company(request):
 
     near_stores = [store for store in queryset
                    if haversine(position, (store.lat, store.lon)) <= 2]
+    for store in near_stores:
+        store.distance = haversine(position, (store.lat, store.lon), unit='m')
     serializer = StoreSerializer(near_stores, many=True)
     return Response(serializer.data)
 
