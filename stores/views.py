@@ -8,6 +8,7 @@ from .serializer import StoreSerializer, CategorySerializer, MenuSerializer
 from rest_framework.filters import SearchFilter
 from haversine import haversine
 from django.db import models
+from rest_framework.pagination import PageNumberPagination
 
 
 # Create your views here.
@@ -97,8 +98,13 @@ def near_my_company(request):
                    if haversine(position, (store.lat, store.lon)) <= 2]
     for store in near_stores:
         store.distance = haversine(position, (store.lat, store.lon), unit='m')
-    serializer = StoreSerializer(near_stores, many=True)
-    return Response(serializer.data)
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    result_page = paginator.paginate_queryset(near_stores, request)
+    serializer = StoreSerializer(result_page, many=True)
+    print(result_page)
+    return paginator.get_paginated_response(serializer.data)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
