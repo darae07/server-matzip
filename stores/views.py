@@ -116,5 +116,74 @@ class MenuViewSet(viewsets.ModelViewSet):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
 
-    def create(self, request):
-        store_menus = Menu.objects.filter(store=request.data['store'])
+
+# 맛집 리스트 뷰
+# 1. 검색조건 >
+#    이름, 카테고리, 동, 근처(company, location),
+# 2. 거리 > 근처일시 활성화
+#    내위치 있는 경우 -> 내위치로 계산
+#    회사 정보 있는 경우 -> 회사 위치로 계산
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny,))
+def store_list(request):
+    queryset = Store.objects.all()
+
+    name = request.query_params.get('name')
+    category = request.query_params.get('category')
+    dong = request.query_params.get('dong')
+    near = request.query_params.get('near')
+
+    if name is not None:
+        queryset = queryset.filter(name__contains=name)
+    if category is not None:
+        queryset = queryset.filter(category=category)
+    if dong is not None:
+        queryset = queryset.filter(location__contains=dong)
+    if near == 'company' or near == 'location':
+        position = (0, 0)
+        if near == 'company':
+            user = request.user
+            contract = Contract.objects.filter(user_id=user).first()
+            if not contract:
+                queryset = queryset.none()
+            else:
+                company_id = contract.company_id
+                company = Company.objects.get(pk=company_id)
+                if company.lat is None or company.lon is None:
+                    queryset = queryset.none()
+                else:
+                    position = (company.lat, company.lon)
+                    condition = get_condition(position)
+                    queryset = queryset.filter(condition)
+        if near == 'location':
+            lat = request.query_params.get('lat')
+            lon = request.query_params.get('lon')
+            if lat is None or lon is None:
+                queryset = queryset.none()
+            else:
+                lat, lon = float(lat), float(lon)
+                position = (lat, lon)
+                condition = get_condition(position)
+                queryset = queryset.filter(condition)
+
+        near_stores = []
+        for store in queryset:
+            distance = haversine(position, (store.lat, store.lon), unit='m')
+            if distance > 1000:
+                return
+            store.distance = distance
+            near_stores.append(store)
+        queryset = near_stores
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 20
+    result_page = paginator.paginate_queryset(queryset, request)
+    serializer = StoreSerializer(result_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+def get_condition(position):
+    return (
+            Q(lat__range=(position[0] - 0.005, position[0] + 0.005)) |
+            Q(lon__range=(position[1] - 0.007, position[1] + 0.007))
+    )
