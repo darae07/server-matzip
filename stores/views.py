@@ -116,6 +116,19 @@ class MenuViewSet(viewsets.ModelViewSet):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
 
+    def create(self, request):
+        print(request.data)
+        store = request.data['store']
+        name = request.data['name']
+        same_menu = Menu.objects.filter(name=name, store=store)
+        print(same_menu)
+        if same_menu:
+            return Response('same menu is exist', status=406)
+        serializer = MenuSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data)
+
 
 # 맛집 리스트 뷰
 # 1. 검색조건 >

@@ -50,4 +50,4 @@ class Menu(models.Model):
     image = models.ImageField(upload_to='stores/menu', default='', null=True, blank=True)
 
     def __str__(self):
-        return self.menu_name
+        return self.name
