@@ -58,6 +58,14 @@ class MembershipViewSet(viewsets.ModelViewSet):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializer
 
+    def get_queryset(self):
+        queryset = Membership.objects.all()
+        state = self.request.query_params.get('status')
+
+        if state is not None:
+            queryset = queryset.filter(status=state)
+            return queryset
+
 
 class InviteViewSet(viewsets.ModelViewSet):
     queryset = Invite.objects.all()
