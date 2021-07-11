@@ -10,3 +10,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
 
 
+class ReviewImageViewSet(viewsets.ModelViewSet):
+    queryset = ReviewImage.objects.all()
+    serializer_class = ReviewImageSerializer
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
