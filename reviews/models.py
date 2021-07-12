@@ -5,8 +5,8 @@ from common.models import CommonUser
 
 # Create your models here.
 class Review(models.Model):
-    store_id = models.ForeignKey(Store, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    user = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=300)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
