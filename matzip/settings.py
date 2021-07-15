@@ -97,7 +97,7 @@ WSGI_APPLICATION = 'matzip.wsgi.application'
 if env('DJANGO_DB_HOST'):
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
             'NAME': env('DJANGO_DB_NAME'),
             'USER': env('DJANGO_DB_USERNAME'),
             'PASSWORD': env('DJANGO_DB_PASSWORD'),
@@ -108,7 +108,7 @@ if env('DJANGO_DB_HOST'):
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
             'NAME': 'placebook',
             'USER': 'root',
             'PASSWORD': '1234',

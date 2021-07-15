@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from haversine import haversine
+from django.contrib.gis.db.models import PointField
 
 
 class Category(models.Model):
@@ -28,15 +29,10 @@ class StoreManager(models.Manager):
 class Store(models.Model):
     name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    lat = models.FloatField(null=True, blank=True)
-    lon = models.FloatField(null=True, blank=True)
-    location = models.CharField(max_length=100, null=True, blank=True)
+    location = PointField(srid=4326, geography=True, blank=True, null=True)
     tel = models.CharField(max_length=50, null=True, blank=True)
     open_time = models.TimeField(null=True, blank=True)
     close_time = models.TimeField(null=True, blank=True)
-    distance = models.FloatField(null=True, blank=True)
-    star = models.FloatField(null=True, blank=True)
-
     objects = models.Manager()
     store_objects = StoreManager()
 

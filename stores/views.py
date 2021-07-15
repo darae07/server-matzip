@@ -9,9 +9,10 @@ from rest_framework.filters import SearchFilter
 from haversine import haversine
 from django.db import models
 from rest_framework.pagination import PageNumberPagination
-
-
+from django.contrib.gis.geos import Point
+from django.contrib.gis.db.models.functions import GeometryDistance
 # Create your views here.
+
 
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.all()
@@ -24,55 +25,34 @@ class StoreViewSet(viewsets.ModelViewSet):
         queryset = Store.objects.all()
         name = self.request.query_params.get('name')
         category = self.request.query_params.get('category')
-        dong = self.request.query_params.get('dong')
         lat = self.request.query_params.get('lat')
         lon = self.request.query_params.get('lon')
         near = self.request.query_params.get('near')
         user = self.request.user
-        print(user, near)
 
-        if user and near == 'true':
-            contract = Contract.objects.filter(user_id=user).first()
-            if contract:
-                company_id = contract.company_id
-                company = Company.objects.get(pk=company_id)
-                position = (company.lat, company.lon)
-                print(position)
-                condition = (
-                        Q(lat__range=(company.lat - 0.005, company.lat + 0.005)) |
-                        Q(lon__range=(company.lon - 0.007, company.lon + 0.007))
-                )
-                queryset = queryset.filter(condition)
-                near_store_ids = []
-                near_store_distances = []
-                for store in queryset:
-                    distance = haversine(position, (store.lat, store.lon), unit='m')
-                    if distance <= 1000:
-                        near_store_ids.append(store.id)
-                        near_store_distances.append(distance)
-                # near_store_ids = [store.id for store in queryset
-                #                   if haversine(position, (store.lat, store.lon)) <= 2]
-                queryset = queryset.filter(id__in=near_store_ids)
-                # queryset = queryset.annotate(distance=haversine(position, ('lat', 'lon'), unit='m'))
         if name is not None:
             queryset = queryset.filter(name__contains=name)
         if category is not None:
             queryset = queryset.filter(category=category)
-        if dong is not None:
-            queryset = queryset.filter(location__contains=dong)
-        if lat is not None and lon is not None:
-            lat, lon = float(lat), float(lon)
-            position = (lat, lon)
+        if near is not None:
+            if near == 'point' and lat and lon:
+                ref_location = Point(lon, lat, srid=4326)
+                queryset = queryset.filter(location__dwithin=(ref_location, 2000))\
+                    .annotate(distance=GeometryDistance('location', ref_location)).order_by('distance')
 
-            condition = (
-                    Q(lat__range=(lat - 0.005, lat + 0.005)) |
-                    Q(lon__range=(lon - 0.007, lon + 0.007))
-            )
-            queryset = queryset.filter(condition)
-
-            near_store_ids = [store.id for store in queryset
-                              if haversine(position, (store.lat, store.lon)) <= 2]
-            queryset = queryset.filter(id__in=near_store_ids)
+            if near == 'company':
+                contract = Contract.objects.filter(user_id=user).first()
+                if not contract:
+                    queryset = queryset.none()
+                else:
+                    company_id = contract.company_id
+                    company = Company.objects.get(pk=company_id)
+                    if company.location is None:
+                        queryset = queryset.none()
+                    else:
+                        ref_location = company.location
+                        queryset = queryset.filter(location__dwithin=(ref_location, 2000))\
+                            .annotate(distance=GeometryDistance('location', ref_location)).order_by('distance')
         return queryset
 
 
@@ -151,8 +131,8 @@ def store_list(request):
         queryset = queryset.filter(name__contains=name)
     if category is not None:
         queryset = queryset.filter(category=category)
-    if dong is not None:
-        queryset = queryset.filter(location__contains=dong)
+    # if dong is not None:
+    #     queryset = queryset.filter(location__contains=dong)
     if near == 'company' or near == 'location':
         position = (0, 0)
         if near == 'company':

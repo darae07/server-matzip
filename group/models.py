@@ -1,13 +1,12 @@
 from django.db import models
 from stores.models import Store, Menu
+from django.contrib.gis.db.models import PointField
 
 
 # Create your models here.
 class Company(models.Model):
     name = models.CharField(max_length=100)
-    lat = models.FloatField(null=True, blank=True)
-    lon = models.FloatField(null=True, blank=True)
-    location = models.CharField(max_length=100, null=True, blank=True)
+    location = PointField(srid=4326, geography=True, blank=True, null=True)
     title = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
