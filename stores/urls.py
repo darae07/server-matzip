@@ -12,6 +12,6 @@ router.register(r'menu', MenuViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('near-my-company', near_my_company),
-    path('store-list', store_list),
+    # path('near-my-company', near_my_company),
+    # path('store-list', store_list),
 ]

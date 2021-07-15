@@ -35,6 +35,7 @@ class Store(models.Model):
     open_time = models.TimeField(null=True, blank=True)
     close_time = models.TimeField(null=True, blank=True)
     distance = models.FloatField(null=True, blank=True)
+    star = models.FloatField(null=True, blank=True)
 
     objects = models.Manager()
     store_objects = StoreManager()

@@ -139,12 +139,13 @@ class MenuViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def store_list(request):
-    queryset = Store.objects.all()
+    queryset = Store.objects.all().order_by('id')
 
     name = request.query_params.get('name')
     category = request.query_params.get('category')
     dong = request.query_params.get('dong')
     near = request.query_params.get('near')
+    order = request.query_params.get('ordering')
 
     if name is not None:
         queryset = queryset.filter(name__contains=name)
@@ -190,6 +191,12 @@ def store_list(request):
 
     paginator = PageNumberPagination()
     paginator.page_size = 20
+    paginator.ordering = 'id'
+    if order is not None:
+        if order == 'star':
+            queryset = queryset.order_by('star')
+        if order == 'distance':
+            queryset = queryset.order_by('distance')
     result_page = paginator.paginate_queryset(queryset, request)
     serializer = StoreSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
