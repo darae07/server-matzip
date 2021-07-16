@@ -1,8 +1,9 @@
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Window, Avg, Subquery
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .models import Store, Menu, Category
 from group.models import Contract, Company
+from reviews.models import Review
 from rest_framework import viewsets, permissions
 from .serializer import StoreSerializer, CategorySerializer, MenuSerializer
 from rest_framework.filters import SearchFilter
@@ -28,7 +29,12 @@ class StoreViewSet(viewsets.ModelViewSet):
         lat = self.request.query_params.get('lat')
         lon = self.request.query_params.get('lon')
         near = self.request.query_params.get('near')
+        order = self.request.query_params.get('order')
         user = self.request.user
+
+        store_reviews = Review.objects.filter(store=OuterRef('pk')).order_by().values('store')
+        avg_stars = store_reviews.annotate(avg_star=Avg('star')).values('avg_star')
+        queryset = queryset.annotate(review_stars=Subquery(avg_stars))
 
         if name is not None:
             queryset = queryset.filter(name__contains=name)
@@ -38,7 +44,7 @@ class StoreViewSet(viewsets.ModelViewSet):
             if near == 'point' and lat and lon:
                 ref_location = Point(lon, lat, srid=4326)
                 queryset = queryset.filter(location__dwithin=(ref_location, 2000))\
-                    .annotate(distance=GeometryDistance('location', ref_location)).order_by('distance')
+                    .annotate(distance=GeometryDistance('location', ref_location))
 
             if near == 'company':
                 contract = Contract.objects.filter(user_id=user).first()
@@ -52,7 +58,13 @@ class StoreViewSet(viewsets.ModelViewSet):
                     else:
                         ref_location = company.location
                         queryset = queryset.filter(location__dwithin=(ref_location, 2000))\
-                            .annotate(distance=GeometryDistance('location', ref_location)).order_by('distance')
+                            .annotate(distance=GeometryDistance('location', ref_location))
+        if order is not None:
+            if order == 'review':
+                queryset = queryset.order_by('review_stars')
+            if order == 'distance' and near is not None:
+                queryset = queryset.order_by('distance')
+
         return queryset
 
 
