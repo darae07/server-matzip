@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from .models import Store, Menu, Category
 from group.models import Contract, Company
 from reviews.models import Review
-from rest_framework import viewsets
+from rest_framework import viewsets, pagination
 from .serializer import StoreSerializer, CategorySerializer, MenuSerializer
 from rest_framework.filters import SearchFilter
 from django.contrib.gis.geos import Point
@@ -16,6 +16,7 @@ from django.contrib.gis.db.models.functions import GeometryDistance
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
+    pagination.PageNumberPagination.page_size = 20
 
     filter_backends = [SearchFilter]
     search_fields = 'name'
