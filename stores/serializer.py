@@ -28,6 +28,7 @@ class StoreSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     distance = serializers.FloatField(allow_null=True)
     review_stars = serializers.FloatField(allow_null=True)
+    members_stars = serializers.FloatField(allow_null=True)
 
     class Meta:
         model = Store

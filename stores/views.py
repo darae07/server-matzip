@@ -8,6 +8,8 @@ from .serializer import StoreSerializer, CategorySerializer, MenuSerializer
 from rest_framework.filters import SearchFilter
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import GeometryDistance
+
+
 # Create your views here.
 
 
@@ -17,6 +19,7 @@ class StoreViewSet(viewsets.ModelViewSet):
 
     filter_backends = [SearchFilter]
     search_fields = 'name'
+    company = None
 
     def get_queryset(self):
         queryset = Store.objects.all()
@@ -28,9 +31,11 @@ class StoreViewSet(viewsets.ModelViewSet):
         order = self.request.query_params.get('order')
         user = self.request.user
 
-        store_reviews = Review.objects.filter(store=OuterRef('pk')).order_by().values('store')
-        avg_stars = store_reviews.annotate(avg_star=Avg('star')).values('avg_star')
-        queryset = queryset.annotate(review_stars=Subquery(avg_stars))
+        # is user joined company?
+        contract = Contract.objects.filter(user_id=user).first()
+        if contract:
+            company_id = contract.company_id
+            self.company = Company.objects.get(pk=company_id)
 
         if name is not None:
             queryset = queryset.filter(name__contains=name)
@@ -39,22 +44,31 @@ class StoreViewSet(viewsets.ModelViewSet):
         if near is not None:
             if near == 'point' and lat and lon:
                 ref_location = Point(lon, lat, srid=4326)
-                queryset = queryset.filter(location__dwithin=(ref_location, 2000))\
+                queryset = queryset.filter(location__dwithin=(ref_location, 2000)) \
                     .annotate(distance=GeometryDistance('location', ref_location))
 
             if near == 'company':
-                contract = Contract.objects.filter(user_id=user).first()
-                if not contract:
+                if not self.company:
                     queryset = queryset.none()
                 else:
-                    company_id = contract.company_id
-                    company = Company.objects.get(pk=company_id)
-                    if company.location is None:
+                    if self.company.location is None:
                         queryset = queryset.none()
                     else:
-                        ref_location = company.location
-                        queryset = queryset.filter(location__dwithin=(ref_location, 2000))\
+                        ref_location = self.company.location
+                        queryset = queryset.filter(location__dwithin=(ref_location, 2000)) \
                             .annotate(distance=GeometryDistance('location', ref_location))
+
+        # add review star score
+        store_reviews = Review.objects.filter(store=OuterRef('pk')).order_by().values('store')
+        avg_stars = store_reviews.annotate(avg_star=Avg('star')).values('avg_star')
+        queryset = queryset.annotate(review_stars=Subquery(avg_stars))
+
+        if self.company:
+            company_members = Contract.objects.filter(company=self.company.id).values('user')
+            members_store_reviews = store_reviews.filter(user__in=company_members)
+            member_avg_stars = members_store_reviews.annotate(member_avg_star=Avg('star')).values('member_avg_star')
+            queryset = queryset.annotate(members_stars=Subquery(member_avg_stars))
+
         if order is not None:
             if order == 'review':
                 queryset = queryset.order_by('review_stars')
@@ -85,4 +99,3 @@ class MenuViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data)
-
