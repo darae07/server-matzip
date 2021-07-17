@@ -20,6 +20,7 @@ class Contract(models.Model):
                                 related_name='members')
     date_joined = models.DateField(auto_now_add=True, blank=True)
     team_name = models.CharField(max_length=100, null=True, blank=True)
+    my_name = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return self.user.username
