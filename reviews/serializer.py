@@ -28,6 +28,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     images = ReviewImageSerializer(read_only=True, many=True)
     comments = CommentSerializer(read_only=True, many=True)
     user = UserSerializer(read_only=True)
+    my_name = serializers.CharField(allow_null=True)
 
     class Meta:
         model = Review
