@@ -5,6 +5,7 @@ from rest_framework.renderers import JSONRenderer
 import json
 from django.core.serializers import serialize
 from .models import CommonUser
+from group.serializer import ContractSerializer
 
 
 class LoginSerializer(serializers.ModelSerializer):
@@ -25,6 +26,7 @@ class LoginSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
+    contract = ContractSerializer(read_only=True, many=False)
 
     def get_image_url(self, queryset):
         request = self.context.get('request')
@@ -36,6 +38,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommonUser
         fields = ['id', 'username', 'email', 'last_login',
-                  'date_joined', 'nickname', 'image_url', 'status', 'phone_number']
+                  'date_joined', 'nickname', 'image_url', 'status', 'phone_number', 'contract']
 
 

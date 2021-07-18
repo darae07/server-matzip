@@ -15,7 +15,7 @@ class Company(models.Model):
 
 class Contract(models.Model):
     user = models.OneToOneField('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
-                                related_name='user', unique=True)
+                                related_name='contract', unique=True)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True,
                                 related_name='members')
     date_joined = models.DateField(auto_now_add=True, blank=True)
