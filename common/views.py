@@ -10,5 +10,10 @@ class CommonUserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        queryset = CommonUser.objects.prefetch_related(Prefetch('contract', queryset=Contract.objects.all()))
+        user = self.request.user
+        my_contract = Contract.objects.filter(user=user).first()
+        if my_contract:
+            my_company = my_contract.company
+            queryset = CommonUser.objects.prefetch_related(
+                Prefetch('contract', queryset=Contract.objects.filter(company=my_company)))
         return queryset
