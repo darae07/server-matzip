@@ -65,6 +65,7 @@ class MembershipViewSet(viewsets.ModelViewSet):
         if state is not None:
             queryset = queryset.filter(status=state)
             return queryset
+        return queryset
 
 
 class InviteViewSet(viewsets.ModelViewSet):

@@ -1,7 +1,7 @@
 from .models import Company, Contract
 from rest_framework import serializers
 from common.models import CommonUser
-# from common.serializers import UserSerializer
+from common.serializers import UserSerializer
 from .models import Vote, Party, Membership, Invite
 from stores.serializer import StoreSerializer, MenuSerializer
 
@@ -14,6 +14,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class ContractSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True, many=False)
 
     class Meta:
         model = Contract
@@ -37,7 +38,7 @@ class VoteSerializer(serializers.ModelSerializer):
 
 
 class MembershipSerializer(serializers.ModelSerializer):
-    # user = UserSerializer(read_only=True, many=False)
+    user = UserSerializer(read_only=True, many=False)
 
     class Meta:
         model = Membership
@@ -56,7 +57,7 @@ class PartySerializer(serializers.ModelSerializer):
 
 class InviteSerializer(serializers.ModelSerializer):
     company = CompanySerializer(read_only=True, many=False)
-    # sender = UserSerializer(read_only=True, many=False)
+    sender = UserSerializer(read_only=True, many=False)
 
     class Meta:
         model = Invite
