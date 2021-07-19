@@ -22,15 +22,15 @@ class StoreViewSet(viewsets.ModelViewSet):
     search_fields = 'name'
     company = None
 
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
         queryset = Store.objects.all()
-        name = self.request.query_params.get('name')
-        category = self.request.query_params.get('category')
-        lat = self.request.query_params.get('lat')
-        lon = self.request.query_params.get('lon')
-        near = self.request.query_params.get('near')
-        order = self.request.query_params.get('order')
-        user = self.request.user
+        name = request.query_params.get('name')
+        category = request.query_params.get('category')
+        lat = request.query_params.get('lat')
+        lon = request.query_params.get('lon')
+        near = request.query_params.get('near')
+        order = request.query_params.get('order')
+        user = request.user
 
         # is user joined company?
         contract = Contract.objects.filter(user_id=user).first()
@@ -76,7 +76,8 @@ class StoreViewSet(viewsets.ModelViewSet):
             if order == 'distance' and near is not None:
                 queryset = queryset.order_by('distance')
 
-        return queryset
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
