@@ -87,6 +87,13 @@ class StoreViewSet(viewsets.ModelViewSet):
 
         if lon and lat:
             data['location'] = Point(float(lon), float(lat))
+
+            ref_location = Point(lon, lat, srid=4326)
+            same_store = Store.objects.filter(name=request.data['name'], location__dwithin=(ref_location, 200))
+            if same_store:
+                return Response({'message': 'the same store exists'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
         category = Category.objects.get(id=request.data['category'])
         data['category'] = category
         serializer = self.serializer_class(data=data)
