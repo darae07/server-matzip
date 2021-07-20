@@ -10,6 +10,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import GeometryDistance
 from django.contrib.gis.geos import Point
 
+
 # Create your views here.
 
 
@@ -92,7 +93,7 @@ class StoreViewSet(viewsets.ModelViewSet):
             same_store = Store.objects.filter(name=request.data['name'], location__dwithin=(ref_location, 200))
             if same_store:
                 return Response({'message': 'the same store exists'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
 
         category = Category.objects.get(id=request.data['category'])
         data['category'] = category
@@ -123,7 +124,8 @@ class MenuViewSet(viewsets.ModelViewSet):
         same_menu = Menu.objects.filter(name=name, store=store)
         print(same_menu)
         if same_menu:
-            return Response('same menu is exist', status=406)
+            return Response({'message': 'the same menu exists'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         serializer = MenuSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

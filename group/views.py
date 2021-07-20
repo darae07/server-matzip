@@ -79,7 +79,8 @@ def my_invite(request):
     user_id = request.user.id
     invite = Invite.objects.filter(receiver=user_id).first()
     if not invite:
-        return Response('isn`t exist invitation', status=406)
+        return Response({'message': 'isn`t exist invitation'},
+                        status=status.HTTP_406_NOT_ACCEPTABLE)
     serializer = InviteSerializer(invite)
     return Response(serializer.data)
 
@@ -100,7 +101,8 @@ def voting(request):
         user_id = request.user.id
         membership = Membership.objects.filter(user=user_id, party=request.data['party']).first()
         if not membership:
-            return Response('isn`t exist membership', status=406)
+            return Response({'message': 'isn`t exist membership'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         serializer = MembershipSerializer(membership.update(vote=request.data['vote']))
         if serializer.is_valid():
             membership.set_vote(serializer.validated_data['vote'])
