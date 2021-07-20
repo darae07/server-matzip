@@ -3,12 +3,12 @@ from rest_framework.response import Response
 from .models import Store, Menu, Category
 from group.models import Contract, Company
 from reviews.models import Review
-from rest_framework import viewsets, pagination
+from rest_framework import viewsets, pagination, status
 from .serializer import StoreSerializer, CategorySerializer, MenuSerializer
 from rest_framework.filters import SearchFilter
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import GeometryDistance
-
+from django.contrib.gis.geos import Point
 
 # Create your views here.
 
@@ -78,6 +78,26 @@ class StoreViewSet(viewsets.ModelViewSet):
 
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+
+        lon = request.data['lon']
+        lat = request.data['lat']
+
+        if lon and lat:
+            data['location'] = Point(float(lon), float(lat))
+        category = Category.objects.get(id=request.data['category'])
+        data['category'] = category
+        serializer = self.serializer_class(data=data)
+
+        if serializer.is_valid():
+            store = Store.objects.create(**serializer.validated_data, category=category)
+            store.save()
+            return Response({'id': store.pk, 'name': store.name}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

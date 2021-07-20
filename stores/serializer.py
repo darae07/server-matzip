@@ -26,9 +26,9 @@ class MenuSerializer(serializers.ModelSerializer):
 class StoreSerializer(serializers.ModelSerializer):
     menus = MenuSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
-    distance = serializers.FloatField(allow_null=True)
-    review_stars = serializers.FloatField(allow_null=True)
-    members_stars = serializers.FloatField(allow_null=True)
+    distance = serializers.FloatField(allow_null=True, required=False)
+    review_stars = serializers.FloatField(allow_null=True, required=False)
+    members_stars = serializers.FloatField(allow_null=True, required=False)
 
     class Meta:
         model = Store
