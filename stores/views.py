@@ -1,4 +1,5 @@
 from django.db.models import OuterRef, Avg, Subquery
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from .models import Store, Menu, Category
 from group.models import Contract, Company
@@ -23,6 +24,14 @@ class StoreViewSet(viewsets.ModelViewSet):
     search_fields = 'name'
     company = None
 
+    def get_company(self):
+        user = self.request.user
+        # is user joined company?
+        contract = Contract.objects.filter(user_id=user).first()
+        if contract:
+            company_id = contract.company_id
+            self.company = Company.objects.get(pk=company_id)
+
     def list(self, request, *args, **kwargs):
         queryset = Store.objects.all()
         name = request.query_params.get('name')
@@ -31,13 +40,8 @@ class StoreViewSet(viewsets.ModelViewSet):
         lon = request.query_params.get('lon')
         near = request.query_params.get('near')
         order = request.query_params.get('order')
-        user = request.user
 
-        # is user joined company?
-        contract = Contract.objects.filter(user_id=user).first()
-        if contract:
-            company_id = contract.company_id
-            self.company = Company.objects.get(pk=company_id)
+        self.get_company()
 
         if name is not None:
             queryset = queryset.filter(name__contains=name)
@@ -61,7 +65,7 @@ class StoreViewSet(viewsets.ModelViewSet):
                             .annotate(distance=GeometryDistance('location', ref_location))
 
         # add review star score
-        store_reviews = Review.objects.filter(store=OuterRef('pk')).order_by().values('store')
+        store_reviews = Review.objects.filter(store=OuterRef('pk')).values('store')
         avg_stars = store_reviews.annotate(avg_star=Avg('star')).values('avg_star')
         queryset = queryset.annotate(review_stars=Subquery(avg_stars))
 
@@ -78,6 +82,34 @@ class StoreViewSet(viewsets.ModelViewSet):
                 queryset = queryset.order_by('distance')
 
         serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        queryset = Store.objects.filter(pk=pk)
+        lat = request.query_params.get('lat')
+        lon = request.query_params.get('lon')
+        self.get_company()
+
+        if self.company and self.company.location:
+            ref_location = self.company.location
+        if lat and lon:
+            ref_location = Point(lon, lat, srid=4326)
+
+        queryset = queryset.annotate(distance=GeometryDistance('location', ref_location))
+
+        # add review star score
+        store_reviews = Review.objects.filter(store=OuterRef('pk')).values('store')
+        avg_stars = store_reviews.annotate(avg_star=Avg('star')).values('avg_star')
+        queryset = queryset.annotate(review_stars=Subquery(avg_stars))
+
+        if self.company:
+            company_members = Contract.objects.filter(company=self.company.id).values('user')
+            members_store_reviews = store_reviews.filter(user__in=company_members)
+            member_avg_stars = members_store_reviews.annotate(member_avg_star=Avg('star')).values('member_avg_star')
+            queryset = queryset.annotate(members_stars=Subquery(member_avg_stars))
+
+        store = get_object_or_404(queryset, pk=pk)
+        serializer = self.serializer_class(store)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
