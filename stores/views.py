@@ -19,8 +19,8 @@ from django.contrib.gis.geos import Point
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
-    pagination.PageNumberPagination.page_size = 20
     pagination_class = PageNumberPagination
+    pagination_class.page_size = 20
 
     filter_backends = [SearchFilter]
     search_fields = 'name'

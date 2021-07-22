@@ -1,6 +1,6 @@
 from django.db.models import Subquery, OuterRef, Q
 from rest_framework.response import Response
-
+from rest_framework.pagination import PageNumberPagination
 from group.models import Contract, Company
 from .models import ReviewImage, Review, Comment
 from rest_framework import viewsets, status, pagination
@@ -11,7 +11,8 @@ from .serializer import ReviewImageSerializer, ReviewSerializer, CommentSerializ
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    pagination.PageNumberPagination.page_size = 5
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 5
     ordering = ['-created_at']
     company = None
 
@@ -38,8 +39,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         if store:
             queryset = queryset.filter(store=store)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+
+        page = self.paginate_queryset(queryset)
+        serializer = self.serializer_class(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
 
 class ReviewImageViewSet(viewsets.ModelViewSet):
