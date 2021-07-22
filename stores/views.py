@@ -1,5 +1,6 @@
 from django.db.models import OuterRef, Avg, Subquery
 from django.shortcuts import get_object_or_404
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from .models import Store, Menu, Category
 from group.models import Contract, Company
@@ -19,6 +20,7 @@ class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
     pagination.PageNumberPagination.page_size = 20
+    pagination_class = PageNumberPagination
 
     filter_backends = [SearchFilter]
     search_fields = 'name'
@@ -86,8 +88,9 @@ class StoreViewSet(viewsets.ModelViewSet):
             if order == 'distance' and near is not None:
                 queryset = queryset.order_by('distance')
 
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+        page = self.paginate_queryset(queryset)
+        serializer = self.serializer_class(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         queryset = Store.objects.filter(pk=pk)
