@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from .models import Company, Contract, Vote, Party, Membership, Invite
 from rest_framework import viewsets, permissions, status, generics
 from .serializer import CompanySerializer, CompanyMemberSerializer, VoteSerializer, PartySerializer, \
-    MembershipSerializer, InviteSerializer
+    MembershipSerializer, InviteSerializer, ContractSerializer
 from common.models import CommonUser
 from rest_framework.decorators import api_view, permission_classes
 
@@ -52,6 +52,11 @@ class VoteViewSet(viewsets.ModelViewSet):
 class PartyViewSet(viewsets.ModelViewSet):
     queryset = Party.objects.all()
     serializer_class = PartySerializer
+
+
+class ContractViewSet(viewsets.ModelViewSet):
+    queryset = Contract.objects.all()
+    serializer_class = ContractSerializer
 
 
 class MembershipViewSet(viewsets.ModelViewSet):
