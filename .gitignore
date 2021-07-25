@@ -6,6 +6,9 @@ __pycache__
 db.sqlite3
 media
 
+# 개발 단계
+*/migrations/*
+
 # Backup files # 
 *.bak 
 
