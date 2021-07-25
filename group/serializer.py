@@ -14,7 +14,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class ContractSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True, many=False)
+    # user = UserSerializer(read_only=True, many=False)
 
     class Meta:
         model = Contract
