@@ -3,6 +3,7 @@ from collections import OrderedDict
 from rest_framework import serializers
 from .models import Review, ReviewImage, Comment
 from common.serializers import UserSerializer
+from common.costume_serializers import FullUserSerializer
 
 
 class ReviewImageSerializer(serializers.ModelSerializer):
@@ -27,7 +28,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     images = ReviewImageSerializer(read_only=True, many=True)
     comments = CommentSerializer(read_only=True, many=True)
-    user = UserSerializer(read_only=True)
+    user = FullUserSerializer(read_only=True)
     my_name = serializers.CharField(allow_null=True)
 
     class Meta:
