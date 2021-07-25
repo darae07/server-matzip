@@ -15,7 +15,7 @@ class Company(models.Model):
 
 class Contract(models.Model):
     user = models.OneToOneField('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
-                                related_name='contract', unique=True)
+                                related_name='contract')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True,
                                 related_name='members')
     date_joined = models.DateField(auto_now_add=True, blank=True)
@@ -63,7 +63,7 @@ class Invite(models.Model):
     sender = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
                                related_name='sender')
     receiver = models.OneToOneField('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
-                                    related_name='receiver', unique=True)
+                                    related_name='receiver')
     date_invited = models.DateField(auto_now_add=True, blank=True)
 
     def __str__(self):

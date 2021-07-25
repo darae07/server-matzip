@@ -1,4 +1,4 @@
-from django.db.models import OuterRef, Avg, Subquery
+from django.db.models import OuterRef, Avg, Subquery, Q
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -13,9 +13,6 @@ from django.contrib.gis.db.models.functions import GeometryDistance
 from django.contrib.gis.geos import Point
 
 
-# Create your views here.
-
-
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
@@ -28,8 +25,9 @@ class StoreViewSet(viewsets.ModelViewSet):
 
     def get_company(self):
         user = self.request.user
+        company = self.request.query_params.get('company')
         # is user joined company?
-        contract = Contract.objects.filter(user_id=user).first()
+        contract = Contract.objects.filter(Q(user_id=user) & Q(company=company)).first()
         if contract:
             company_id = contract.company_id
             self.company = Company.objects.get(pk=company_id)

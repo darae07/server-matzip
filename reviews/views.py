@@ -22,7 +22,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         # 같은 회사 멤버이거나, 공개설정된 리뷰만 조회 가능
         # is user joined company?
         user = self.request.user
-        contract = Contract.objects.filter(user_id=user).first()
+        company = self.request.query_params.get('company')
+        contract = Contract.objects.filter(Q(user_id=user) & Q(company=company)).first()
         if contract:
             company_id = contract.company_id
             self.company = Company.objects.get(pk=company_id)
