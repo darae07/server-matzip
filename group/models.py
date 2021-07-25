@@ -5,7 +5,7 @@ from django.contrib.gis.db.models import PointField
 
 # Create your models here.
 class Company(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     location = PointField(srid=4326, geography=True, blank=True, null=True)
     title = models.CharField(max_length=200, null=True, blank=True)
 
