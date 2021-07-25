@@ -11,7 +11,7 @@
 from rest_framework.response import Response
 from .models import Company, Contract, Invite
 from rest_framework import viewsets, status
-from .serializer import CompanySerializer, ContractSerializer
+from .serializer import CompanySerializer, ContractSerializer, InviteSerializer, InviteCreateSerializer
 from django.db.models import Q
 from common.models import CommonUser
 
@@ -50,7 +50,43 @@ class ContractViewSet(viewsets.ModelViewSet):
             contract = Contract.objects.create(**serializer.validated_data)
             print(contract)
             contract.save()
-            return Response({'id': contract.pk, 'user': contract.user.id, 'username': contract.user.username}, status=status.HTTP_201_CREATED)
+            return Response({'id': contract.pk, 'user': contract.user.id, 'username': contract.user.username},
+                            status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+class InviteViewSet(viewsets.ModelViewSet):
+    queryset = Invite.objects.all()
+    serializer_class = InviteSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = self.queryset.filter(receiver=user)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        user = request.user
+        data['sender'] = user.id
+
+        same_contract = Contract.objects.filter(Q(user=data['receiver']) & Q(company=data['company']))
+        if same_contract:
+            return Response({'message': 'the same contract exists'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        same_invite = Invite.objects.filter(Q(receiver=data['receiver']) & Q(company=data['company']))
+        if same_invite:
+            return Response({'message': 'the same invite exists'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        serializer = InviteCreateSerializer(data=data)
+        if serializer.is_valid():
+            invite = Invite.objects.create(**serializer.validated_data)
+            invite.save()
+            print(serializer.data)
+            return Response({ 'id': invite.id}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)

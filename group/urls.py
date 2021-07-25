@@ -2,8 +2,8 @@ from django.urls import path
 from django.conf.urls import include
 from rest_framework import routers
 from .views import CompanyMemberViewSet, my_company_member, PartyViewSet, \
-    VoteViewSet, MembershipViewSet, InviteViewSet, my_invite, voting, MyInvitedParty
-from .views_company import CompanyViewSet, ContractViewSet
+    VoteViewSet, MembershipViewSet, my_invite, voting, MyInvitedParty
+from .views_company import CompanyViewSet, ContractViewSet, InviteViewSet
 
 router = routers.DefaultRouter()
 router.register(r'company', CompanyViewSet)

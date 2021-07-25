@@ -62,3 +62,12 @@ class InviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invite
         fields = '__all__'
+
+
+class InviteCreateSerializer(serializers.ModelSerializer):
+    # company = serializers.RelatedField(read_only=True, required=True)
+    # sender = serializers.RelatedField(read_only=True, required=True)
+
+    class Meta:
+        model = Invite
+        fields = '__all__'
