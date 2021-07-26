@@ -1,4 +1,4 @@
-from django.db.models import F, Prefetch, OuterRef, Subquery
+from django.db.models import Prefetch
 from rest_framework import viewsets
 from .models import CommonUser
 from .costume_serializers import FullUserSerializer
@@ -10,10 +10,8 @@ class CommonUserViewSet(viewsets.ModelViewSet):
     serializer_class = FullUserSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        my_contract = Contract.objects.filter(user=user).first()
-        if my_contract:
-            my_company = my_contract.company
-            queryset = CommonUser.objects.prefetch_related(
-                Prefetch('contract', queryset=Contract.objects.filter(company=my_company))).order_by('-date_joined')
+        company = self.request.query_params.get('company')
+        queryset = CommonUser.objects.prefetch_related(
+            Prefetch('contract', queryset=Contract.objects.filter(company=company))).order_by('-date_joined')
+
         return queryset
