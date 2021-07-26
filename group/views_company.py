@@ -8,12 +8,14 @@
 # invite
 # r - 나의 초대 목록
 # c - 회사 - 유저 동일한 항목은 유일해야함
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Company, Contract, Invite
 from rest_framework import viewsets, status
 from .serializer import CompanySerializer, ContractSerializer, InviteSerializer, InviteCreateSerializer
-from django.db.models import Q
+from django.db.models import Q, Prefetch, OuterRef, Subquery
 from common.models import CommonUser
+from common.costume_serializers import FullUserSerializer
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
@@ -25,6 +27,20 @@ class CompanyViewSet(viewsets.ModelViewSet):
         contracts = Contract.objects.filter(user=user).values('company')
         queryset = self.queryset.filter(company__in=contracts)
         return queryset
+
+    @action(detail=True)
+    def members(self, request, pk=None):
+        contract = Contract.objects.filter(company=pk)
+        print(contract)
+        members = CommonUser.objects.filter(contract__company=pk)\
+            .prefetch_related(Prefetch( lookup='contract', queryset=Contract.objects.filter(company=pk),
+                                       to_attr='prefetched_contract'))
+        page = self.paginate_queryset(members)
+        if page is not None:
+            serializer = FullUserSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = FullUserSerializer(members, many=True)
+        return Response(serializer.data)
 
 
 class ContractViewSet(viewsets.ModelViewSet):
