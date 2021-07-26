@@ -37,25 +37,24 @@ class Party(models.Model):
         return self.name
 
 
-class Vote(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE, null=True, blank=True, related_name='store')
-    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, null=True, blank=True, related_name='menu')
-    party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='votes')
-
-    def __str__(self):
-        return self.store.name
-
-
 class Membership(models.Model):
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
     party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='membership')
     date_joined = models.DateField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
-    vote = models.ForeignKey(Vote, on_delete=models.CASCADE, null=True, blank=True)
     status = models.SmallIntegerField(default=1)
 
     def __str__(self):
         return self.user.username
+
+
+class Vote(models.Model):
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, null=True, blank=True, related_name='store')
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, null=True, blank=True, related_name='menu')
+    membership = models.OneToOneField(Membership, null=True, blank=True, related_name='vote', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.store.name
 
 
 class Invite(models.Model):
