@@ -66,3 +66,15 @@ class MembershipViewSet(viewsets.ModelViewSet):
             return Response({'id': membership.pk}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VoteViewSet(viewsets.ModelViewSet):
+    queryset = Vote.objects.all()
+    serializer_class = VoteSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset
+        party = self.request.query_params.get('party')
+        if party:
+            queryset = queryset.filter(membership__party=party)
+        return queryset
