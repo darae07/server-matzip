@@ -47,6 +47,13 @@ class MembershipSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class MembershipCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Membership
+        fields = '__all__'
+
+
 class PartySerializer(serializers.ModelSerializer):
     company = CompanySerializer(read_only=True, many=False)
     membership = MembershipSerializer(read_only=True, many=True)
