@@ -1,4 +1,4 @@
-from group.serializer import ContractSerializer
+from group.serializer_contract import ContractSerializer
 from .serializers import UserSerializer
 
 

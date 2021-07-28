@@ -4,6 +4,7 @@ from common.models import CommonUser
 from common.serializers import UserSerializer
 from .models import Vote, Party, Membership, Invite
 from stores.serializer import StoreSerializer, MenuSerializer
+from common.costume_serializers import FullUserSerializer
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -38,7 +39,8 @@ class VoteSerializer(serializers.ModelSerializer):
 
 
 class MembershipSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True, many=False)
+    user = FullUserSerializer(read_only=True, many=False)
+    vote = VoteSerializer(read_only=True, many=False)
 
     class Meta:
         model = Membership
@@ -46,9 +48,9 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 
 class PartySerializer(serializers.ModelSerializer):
-    votes = VoteSerializer(read_only=True, many=True)
     company = CompanySerializer(read_only=True, many=False)
     membership = MembershipSerializer(read_only=True, many=True)
+    votes = VoteSerializer(read_only=True, many=False)
 
     class Meta:
         model = Party
