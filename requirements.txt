@@ -18,7 +18,7 @@ haversine==2.3.1
 idna==2.10
 oauthlib==3.1.1
 Pillow==8.2.0
-psycopg2==2.7.7
+psycopg2==2.8.4
 psycopg2-binary==2.8.6
 pycparser==2.20
 PyJWT==2.1.0
