@@ -14,6 +14,7 @@ from pathlib import Path
 
 import environ
 from datetime import timedelta
+import dj_database_url
 
 root = environ.Path(__file__)
 env = environ.Env(DEBUG=(bool, False), )
@@ -54,9 +55,14 @@ INSTALLED_APPS = [
     'dj_rest_auth.registration',
     'rest_framework.authtoken',
     'django.contrib.sites',
+
+    # allauth
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+
+    # provider
+    'allauth.socialaccount.providers.google',
     'django.contrib.gis',
 ]
 SITE_ID = 1
@@ -69,6 +75,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'matzip.urls'
@@ -117,6 +124,10 @@ else:
         }
     }
 
+DEBUG = False
+ALLOWED_HOSTS = ['127.0.0.1', '.herokuapp.com']
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -218,3 +229,12 @@ AUTH_USER_MODEL = 'common.CommonUser'
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'common.serializers.LoginSerializer',
 }
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend'
+)
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_SIGNUP_FORM_CLASS = 'common.forms.SignupForm'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
