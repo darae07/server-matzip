@@ -5,10 +5,9 @@ from .models import CommonUser
 # Register your models here.
 
 
-
-# class UserAdmin(BaseUserAdmin):
-#     inlines = (ProfileInline,)
+class CustomUserAdmin(UserAdmin):
+    ordering = ('email',)
 
 
 # admin.site.unregister(CommonUser)
-admin.site.register(CommonUser, UserAdmin)
+admin.site.register(CommonUser, CustomUserAdmin)

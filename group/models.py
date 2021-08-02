@@ -23,7 +23,7 @@ class Contract(models.Model):
     my_name = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
-        return self.user.username
+        return self.user.email
 
 
 class Party(models.Model):
@@ -45,7 +45,7 @@ class Membership(models.Model):
     status = models.SmallIntegerField(default=1)
 
     def __str__(self):
-        return self.user.username
+        return self.user.email
 
 
 class Vote(models.Model):
@@ -66,4 +66,4 @@ class Invite(models.Model):
     date_invited = models.DateField(auto_now_add=True, blank=True)
 
     def __str__(self):
-        return self.receiver.username
+        return self.receiver.email
