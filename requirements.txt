@@ -31,4 +31,4 @@ typing-extensions==3.10.0.0
 urllib3==1.26.5
 whitenoise==5.3.0
 python-environ==0.4.54
-GDAL=3.3.1
+GDAL==3.3.1
