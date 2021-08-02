@@ -27,7 +27,7 @@ class UserManagersTests(TestCase):
         self.assertEqual(admin_user.email, 'super@user.com')
         self.assertTrue(admin_user.is_active)
         self.assertTrue(admin_user.is_staff)
-        self.assertTrue(admin_user.is_supseruser)
+        self.assertTrue(admin_user.is_superuser)
         try:
             self.assertIsNone(admin_user.username)
         except AttributeError:
