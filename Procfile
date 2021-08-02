@@ -1,1 +1,1 @@
-web:gunicorn server-matzip.wsgi
+web: gunicorn server-matzip.matzip.wsgi
