@@ -1,1 +1,1 @@
-web: gunicorn server-matzip.wsgi --log-file -
+web:gunicorn server-matzip.wsgi --log-file -
