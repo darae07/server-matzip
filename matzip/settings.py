@@ -33,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ['127.0.0.1', '.herokuapp.com', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'our-matzip.herokuapp.com', 'localhost']
 
 # Application definition
 INSTALLED_APPS = [
