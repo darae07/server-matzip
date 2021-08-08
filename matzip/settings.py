@@ -15,6 +15,7 @@ from pathlib import Path
 import environ
 from datetime import timedelta
 import dj_database_url
+import django_heroku
 
 root = environ.Path(__file__)
 env = environ.Env(DEBUG=(bool, False), )
@@ -23,7 +24,7 @@ SITE_ROOT = root()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
-
+django_heroku.settings(locals())
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
