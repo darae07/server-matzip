@@ -66,16 +66,16 @@ class StoreViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(location__dwithin=(ref_location, 2000)) \
                     .annotate(distance=GeometryDistance('location', ref_location))
 
-            if near == 'company':
-                if not self.company:
-                    queryset = queryset.none()
-                else:
-                    if self.company.location is None:
-                        queryset = queryset.none()
-                    else:
-                        ref_location = self.company.location
-                        queryset = queryset.filter(location__dwithin=(ref_location, 2000)) \
-                            .annotate(distance=GeometryDistance('location', ref_location))
+            # if near == 'company':
+            #     if not self.company:
+            #         queryset = queryset.none()
+            #     else:
+            #         if self.company.location is None:
+            #             queryset = queryset.none()
+            #         else:
+            #             ref_location = self.company.location
+            #             queryset = queryset.filter(location__dwithin=(ref_location, 2000)) \
+            #                 .annotate(distance=GeometryDistance('location', ref_location))
 
         # add review star score
         queryset = self.get_review(queryset)
@@ -96,8 +96,8 @@ class StoreViewSet(viewsets.ModelViewSet):
         lon = request.query_params.get('lon')
         self.get_company()
 
-        if self.company and self.company.location:
-            ref_location = self.company.location
+        # if self.company and self.company.location:
+        #     ref_location = self.company.location
         if lat and lon:
             ref_location = Point(lon, lat, srid=4326)
 
