@@ -22,7 +22,7 @@ class StoreViewSet(viewsets.ModelViewSet):
     filter_backends = [SearchFilter]
     search_fields = 'name'
     company = None
-
+    
     def get_company(self):
         user = self.request.user
         company = self.request.query_params.get('company')
