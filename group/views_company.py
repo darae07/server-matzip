@@ -17,6 +17,7 @@ from .serializer import CompanySerializer, ContractSerializer, InviteSerializer,
 from django.db.models import Q, Prefetch
 from common.models import CommonUser
 from common.costume_serializers import FullUserSerializer
+from django.contrib.gis.geos import Point
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
@@ -31,7 +32,6 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True)
     def members(self, request, pk=None):
-        contract = Contract.objects.filter(company=pk)
         members = CommonUser.objects.filter(contract__company=pk)\
             .prefetch_related(Prefetch(lookup='contract', queryset=Contract.objects.filter(company=pk),
                                        to_attr='prefetched_contract'))
@@ -41,6 +41,24 @@ class CompanyViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = FullUserSerializer(members, many=True)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+
+        lon = request.data['lon']
+        lat = request.data['lat']
+
+        if lon and lat:
+            data['location'] = Point(float(lon), float(lat))
+
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            company = Company.objects.create(**serializer.validated_data)
+            company.save()
+            return Response({'id': company.pk, 'name': company.name}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class ContractViewSet(viewsets.ModelViewSet):
