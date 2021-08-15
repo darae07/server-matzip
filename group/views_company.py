@@ -25,14 +25,13 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        contracts = Contract.objects.filter(user=user).values('company')
-        queryset = self.queryset.filter(company__in=contracts)
+        contracts = Contract.objects.filter(user=user.id).values('company')
+        queryset = self.queryset.filter(id__in=contracts)
         return queryset
 
     @action(detail=True)
     def members(self, request, pk=None):
         contract = Contract.objects.filter(company=pk)
-        print(contract)
         members = CommonUser.objects.filter(contract__company=pk)\
             .prefetch_related(Prefetch(lookup='contract', queryset=Contract.objects.filter(company=pk),
                                        to_attr='prefetched_contract'))
