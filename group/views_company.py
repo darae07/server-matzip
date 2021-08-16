@@ -32,7 +32,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True)
     def members(self, request, pk=None):
-        members = CommonUser.objects.filter(contract__company=pk)\
+        members = CommonUser.objects.filter(contract__company=pk) \
             .prefetch_related(Prefetch(lookup='contract', queryset=Contract.objects.filter(company=pk),
                                        to_attr='prefetched_contract'))
         page = self.paginate_queryset(members)
@@ -59,6 +59,23 @@ class CompanyViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        data = request.data
+
+        lon = request.data['lon']
+        lat = request.data['lat']
+
+        company = Company.objects.get(pk=pk)
+        if lon and lat:
+            data['location'] = Point(float(lon), float(lat))
+
+        serializer = self.serializer_class(company, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save(**serializer.validated_data)
+            return Response({'id': pk}, status=status.HTTP_200_OK)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class ContractViewSet(viewsets.ModelViewSet):
@@ -120,7 +137,7 @@ class InviteViewSet(viewsets.ModelViewSet):
             invite = Invite.objects.create(**serializer.validated_data)
             invite.save()
             print(serializer.data)
-            return Response({ 'id': invite.id}, status=status.HTTP_201_CREATED)
+            return Response({'id': invite.id}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
