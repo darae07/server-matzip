@@ -1,9 +1,9 @@
+from django.utils.dateparse import parse_datetime
 from .models import Company, Contract
 from rest_framework import serializers
-from common.models import CommonUser
 from common.serializers import UserSerializer
 from .models import Vote, Party, Membership, Invite
-from stores.serializer import StoreSerializer, MenuSerializer
+from stores.serializer import StoreSerializer
 from common.costume_serializers import FullUserSerializer
 
 
@@ -54,7 +54,7 @@ class MembershipCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PartySerializer(serializers.ModelSerializer):
+class PartyListSerializer(serializers.ModelSerializer):
     company = CompanySerializer(read_only=True, many=False)
     membership = MembershipSerializer(read_only=True, many=True)
     votes = VoteSerializer(read_only=True, many=False)
@@ -62,6 +62,30 @@ class PartySerializer(serializers.ModelSerializer):
     class Meta:
         model = Party
         fields = '__all__'
+
+
+class PartySerializer(serializers.ModelSerializer):
+    members = MembershipSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Party
+        fields = '__all__'
+        list_serializer_class = PartyListSerializer
+
+    def create(self, validated_data):
+        s = self.data['date']
+        date = parse_datetime(s)
+        data = validated_data
+        data['date'] = date
+        return Party.objects.create(**data)
+
+    def update(self, instance, validated_data):
+        instance.company = validated_data.get('company', instance.company)
+        instance.name = validated_data.get('name', instance.name)
+        instance.description = validated_data.get('description', instance.description)
+        instance.date = parse_datetime(self.data['date'])
+        instance.save()
+        return instance
 
 
 class InviteSerializer(serializers.ModelSerializer):

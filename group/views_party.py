@@ -10,11 +10,13 @@
 # r - 파티별 투표 조회
 # c -
 from django.db.models import Prefetch
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from .models import Party, Membership, Vote, Contract
 from common.models import CommonUser
 from rest_framework import viewsets, status
-from .serializer import PartySerializer, MembershipSerializer, VoteSerializer, MembershipCreateSerializer
+from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \
+    MembershipCreateSerializer
 
 
 class PartyViewSet(viewsets.ModelViewSet):
@@ -30,6 +32,17 @@ class PartyViewSet(viewsets.ModelViewSet):
         membership = Membership.objects.prefetch_related(Prefetch('user', queryset=user,
                                                                   to_attr='prefetched_contracts'))
         return queryset.prefetch_related(Prefetch('membership', queryset=membership, to_attr='prefetched_membership'))
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset
+        page = self.paginate_queryset(queryset)
+        serializer = PartyListSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        party = get_object_or_404(self.queryset, pk=pk)
+        serializer = PartyListSerializer(party)
+        return Response(serializer.data)
 
 
 class MembershipViewSet(viewsets.ModelViewSet):
