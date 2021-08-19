@@ -16,7 +16,7 @@ from .models import Party, Membership, Vote, Contract
 from common.models import CommonUser
 from rest_framework import viewsets, status
 from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \
-    MembershipCreateSerializer
+    MembershipCreateSerializer, VoteListSerializer
 
 
 class PartyViewSet(viewsets.ModelViewSet):
@@ -102,3 +102,14 @@ class VoteViewSet(viewsets.ModelViewSet):
         if party:
             queryset = queryset.filter(membership__party=party)
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset
+        page = self.paginate_queryset(queryset)
+        serializer = VoteListSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        vote = get_object_or_404(self.queryset, pk=pk)
+        serializer = VoteListSerializer(vote)
+        return Response(serializer.data)
