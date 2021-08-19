@@ -137,6 +137,26 @@ class StoreViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
+    def partial_update(self, request, pk, *args, **kwargs):
+        data = request.data
+
+        lon = request.data['lon']
+        lat = request.data['lat']
+
+        if lon and lat:
+            data['location'] = Point(float(lon), float(lat))
+
+        if 'category' in data:
+            category = Category.objects.get(id=request.data['category'])
+            data['category'] = category
+
+        store = Store.objects.get(pk=pk)
+        serializer = self.serializer_class(store, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save(**serializer.validated_data)
+            return Response({'id': pk}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
