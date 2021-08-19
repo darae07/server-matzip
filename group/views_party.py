@@ -47,7 +47,7 @@ class PartyViewSet(viewsets.ModelViewSet):
 
 class MembershipViewSet(viewsets.ModelViewSet):
     queryset = Membership.objects.all()
-    serializer_class = MembershipSerializer
+    serializer_class = MembershipCreateSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -61,6 +61,17 @@ class MembershipViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status=state)
 
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset
+        page = self.paginate_queryset(queryset)
+        serializer = MembershipSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        membership = get_object_or_404(self.queryset, pk=pk)
+        serializer = MembershipSerializer(membership)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         data = request.data
