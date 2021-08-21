@@ -7,4 +7,4 @@ class FullUserSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         fields = ['id', 'email', 'last_login',
-                  'date_joined', 'nickname', 'image_url', 'status', 'phone_number', 'contract']
+                  'date_joined', 'nickname', 'image', 'status', 'phone_number', 'contract']
