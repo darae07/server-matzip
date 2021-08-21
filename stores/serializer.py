@@ -9,18 +9,11 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class MenuSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
+    image = serializers.ImageField(use_url=True)
 
     class Meta:
         model = Menu
-        fields = ['store', 'name', 'price', 'image_url', 'id']
-
-    def get_image_url(self, queryset):
-        request = self.context.get('request')
-        if queryset.image:
-            image_url = queryset.image.url
-            return request.build_absolute_uri(image_url)
-        return None
+        fields = ['store', 'name', 'price', 'id', 'image']
 
 
 class StoreSerializer(serializers.ModelSerializer):
