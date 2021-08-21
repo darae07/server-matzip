@@ -2,16 +2,15 @@ from collections import OrderedDict
 
 from rest_framework import serializers
 from .models import Review, ReviewImage, Comment
-from common.serializers import UserSerializer
 from common.costume_serializers import FullUserSerializer
 
 
 class ReviewImageSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
+    image = serializers.ImageField(use_url=True)
 
     class Meta:
         model = ReviewImage
-        fields = ['image_url']
+        fields = ['image']
 
     def get_image_url(self, queryset):
         request = self.context.get('request')
