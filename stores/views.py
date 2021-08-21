@@ -97,12 +97,13 @@ class StoreViewSet(viewsets.ModelViewSet):
         lon = request.query_params.get('lon')
         self.get_company()
 
+        ref_location = None
         if self.company and self.company.location:
             ref_location = self.company.location
         if lat and lon:
             ref_location = Point(lon, lat, srid=4326)
-
-        queryset = queryset.annotate(distance=GeometryDistance('location', ref_location))
+        if ref_location:
+            queryset = queryset.annotate(distance=GeometryDistance('location', ref_location))
 
         # add review star score
         queryset = self.get_review(queryset)
