@@ -24,7 +24,7 @@ class ReviewImage(models.Model):
 
 
 class Comment(models.Model):
-    user_id = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     parent_post = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='comments')
