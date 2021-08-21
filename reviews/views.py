@@ -1,4 +1,5 @@
 from django.db.models import Subquery, OuterRef, Q
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from group.models import Contract, Company
@@ -49,6 +50,28 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class ReviewImageViewSet(viewsets.ModelViewSet):
     queryset = ReviewImage.objects.all()
     serializer_class = ReviewImageSerializer
+    parser_classes = [MultiPartParser]
+
+    def create(self, request, *args, **kwargs):
+        if request.FILES:
+            request.data.image = request.FILES
+        if request.data['review']:
+            request.data.review = request.data['review']
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        if request.FILES:
+            request.data.image = request.FILES
+        if request.data['review']:
+            request.data.review = request.data['review']
+        instance = ReviewImage.objects.get(pk=pk)
+        serializer = self.serializer_class(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**serializer.validated_data)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

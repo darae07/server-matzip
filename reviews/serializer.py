@@ -10,12 +10,7 @@ class ReviewImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReviewImage
-        fields = ['image']
-
-    def get_image_url(self, queryset):
-        request = self.context.get('request')
-        image_url = queryset.image.url
-        return request.build_absolute_uri(image_url)
+        fields = ['image', 'review']
 
 
 class CommentSerializer(serializers.ModelSerializer):
