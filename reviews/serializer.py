@@ -22,9 +22,15 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class CommentListSerializer(CommentSerializer):
     user = FullUserSerializer(read_only=True)
+    child_comments = serializers.SerializerMethodField()
 
     class Meta(CommentSerializer.Meta):
         fields = '__all__'
+
+    def get_child_comments(self, instance):
+        serializer = self.__class__(instance.child_comments, many=True)
+        serializer.bind('', self)
+        return serializer.data
 
 
 class ReviewSerializer(serializers.ModelSerializer):

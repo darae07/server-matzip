@@ -78,6 +78,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentListSerializer
 
+    def get_queryset(self):
+        queryset = Comment.objects.filter(parent_comment=None).order_by('-created_at')
+        return queryset
+
     def create(self, request, *args, **kwargs):
         data = request.data
         serializer = CommentSerializer(data={**data, 'user': request.user.id})

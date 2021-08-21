@@ -28,7 +28,8 @@ class Comment(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     parent_post = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='comments')
-    parent_comment = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+    parent_comment = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True,
+                                       related_name='child_comments')
 
     def __str__(self):
         return self.content
