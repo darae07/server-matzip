@@ -14,8 +14,16 @@ class ReviewImageSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Comment
+        fields = '__all__'
+
+
+class CommentListSerializer(CommentSerializer):
+    user = FullUserSerializer(read_only=True)
+
+    class Meta(CommentSerializer.Meta):
         fields = '__all__'
 
 

@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 from group.models import Contract, Company
 from .models import ReviewImage, Review, Comment
 from rest_framework import viewsets, status, pagination
-from .serializer import ReviewImageSerializer, ReviewSerializer, CommentSerializer
+from .serializer import ReviewImageSerializer, ReviewSerializer, CommentSerializer, CommentListSerializer
 
 
 # Create your views here.
@@ -76,5 +76,20 @@ class ReviewImageViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    serializer_class = CommentListSerializer
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = CommentSerializer(data={**data, 'user': request.user.id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        data = request.data
+        comment = Comment.objects.get(pk=pk)
+        serializer = CommentSerializer(comment, data={**data, 'user': request.user.id}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**serializer.validated_data)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
