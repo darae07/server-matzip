@@ -1,6 +1,7 @@
 from django.db.models import OuterRef, Avg, Subquery, Q
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from .models import Store, Menu, Category
 from group.models import Contract, Company
@@ -166,6 +167,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class MenuViewSet(viewsets.ModelViewSet):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
+    parser_classes = [MultiPartParser]
 
     def create(self, request):
         print(request.data)
@@ -176,7 +178,21 @@ class MenuViewSet(viewsets.ModelViewSet):
         if same_menu:
             return Response({'message': 'the same menu exists'},
                             status=status.HTTP_406_NOT_ACCEPTABLE)
+        request.data.image = request.FILES
         serializer = MenuSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        data = request.data
+
+        menu = Menu.objects.get(pk=pk)
+        if request.FILES:
+            data.image = request.FILES
+        serializer = self.serializer_class(menu, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save(**serializer.validated_data)
+            return Response({'id': pk}, status=status.HTTP_200_OK)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
