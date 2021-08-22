@@ -1,5 +1,6 @@
 from django.db.models import Prefetch
-from rest_framework import viewsets
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import viewsets, request
 from .models import CommonUser
 from .costume_serializers import FullUserSerializer
 from group.models import Contract
@@ -26,3 +27,24 @@ class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     callback_url = "http://localhost:3000"
     client_class = OAuth2Client
+
+
+@csrf_exempt
+def google_token():
+    if 'code' not in request.body.decode():
+        from rest_framework_simplejwt.settings import api_settings as jwt_settings
+        from rest_framework_simplejwt.views import TokenRefreshView
+
+        class RefreshAuth(TokenRefreshView):
+            def post(self, *args, **kwargs):
+                self.request.data._mutable = True
+                self.request.data['refresh'] = self.request.data.get('refresh_token')
+                self.request.data._mutable = False
+                response = super().post(self.request, *args, **kwargs)
+                response.data['refresh_token'] = response.data['refresh']
+                response.data['access_token'] = response.data['access']
+                return response
+
+        return RefreshAuth
+    else:
+        return GoogleLogin

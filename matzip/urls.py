@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from common.views import GoogleLogin
+from common.views import GoogleLogin, google_token
 
 urlpatterns = [
     path('stores/', include('stores.urls')),
@@ -29,6 +29,6 @@ urlpatterns = [
     path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     path('accounts/', include('allauth.urls')),
     # used to validate code & access tokens given by google and refresh google token
-    path('social-login/google/', GoogleLogin.as_view(), name='google_login'),
+    path('social-login/google/', google_token, name='google_login'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
