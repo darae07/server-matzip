@@ -35,11 +35,16 @@ class CommentListSerializer(CommentSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     images = ReviewImageSerializer(read_only=True, many=True)
-    comments = CommentSerializer(read_only=True, many=True)
+    comments = serializers.SerializerMethodField('get_comments')
     user = FullUserSerializer(read_only=True)
     my_name = serializers.CharField(allow_null=True)
 
     class Meta:
         model = Review
         fields = '__all__'
+
+    def get_comments(self):
+        comments = Comment.objects.filter(parent_comment=None)
+        serializer = CommentListSerializer(instance=comments, many=True)
+        return serializer.data
 
