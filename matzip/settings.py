@@ -64,6 +64,8 @@ INSTALLED_APPS = [
     # provider
     'allauth.socialaccount.providers.google',
     'django.contrib.gis',
+    'corsheaders',
+    'django.contrib.sites'
 ]
 SITE_ID = 1
 
@@ -76,6 +78,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'matzip.urls'
@@ -235,3 +238,17 @@ LOGIN_REDIRECT_URL = '/'
 ACCOUNT_SIGNUP_FORM_CLASS = 'common.forms.SignupForm'
 
 django_heroku.settings(locals())
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
+
+CORS_ORIGIN_ALLOW_ALL = True
