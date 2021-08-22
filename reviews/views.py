@@ -52,6 +52,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
+    def partial_update(self, request, pk, *args, **kwargs):
+        instance = Review.objects.get(pk=pk)
+        data = request.data
+        data['user'] = request.user.id
+        serializer = ReviewSerializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**serializer.validated_data)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
 
 class ReviewImageViewSet(viewsets.ModelViewSet):
     queryset = ReviewImage.objects.all()
