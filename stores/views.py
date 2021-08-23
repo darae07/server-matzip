@@ -1,5 +1,6 @@
 from django.db.models import OuterRef, Avg, Subquery, Q
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -196,3 +197,10 @@ class MenuViewSet(viewsets.ModelViewSet):
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'])
+    def delete_image(self, request, pk=None):
+        menu = self.get_object()
+        menu.image.delete(save=True)
+        menu.save()
+        return Response(data={'id': pk}, status=status.HTTP_200_OK)
