@@ -44,10 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # my apps
     'stores.apps.StoresConfig',
     'reviews.apps.ReviewsConfig',
     'common.apps.CommonConfig',
     'group.apps.GroupConfig',
+
     'rest_framework',
     'knox',
     'rest_framework_simplejwt.token_blacklist',
@@ -55,6 +58,8 @@ INSTALLED_APPS = [
     'dj_rest_auth.registration',
     'rest_framework.authtoken',
     'django.contrib.sites',
+    'cloudinary_storage',
+    'cloudinary',
 
     # allauth
     'allauth',
@@ -104,16 +109,15 @@ WSGI_APPLICATION = 'matzip.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': env('DJANGO_DB_NAME'),
-            'USER': env('DJANGO_DB_USERNAME'),
-            'PASSWORD': env('DJANGO_DB_PASSWORD'),
-            'HOST': env('DJANGO_DB_HOST'),
-            'PORT': env('DJANGO_DB_PORT'),
-        }
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': env('DJANGO_DB_NAME'),
+        'USER': env('DJANGO_DB_USERNAME'),
+        'PASSWORD': env('DJANGO_DB_PASSWORD'),
+        'HOST': env('DJANGO_DB_HOST'),
+        'PORT': env('DJANGO_DB_PORT'),
     }
-
+}
 
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
@@ -161,6 +165,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUD_NAME'),
+    'API_KEY': env('CLOUD_API_KEY'),
+    'API_SECRET': env('CLOUD_API_SECRET'),
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -222,7 +233,7 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_USER_MODEL_USERNAME_FIELD=None
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'common.serializers.LoginSerializer',
