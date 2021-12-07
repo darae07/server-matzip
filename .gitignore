@@ -49,7 +49,6 @@ wheels/
 *.egg 
 *.manifest 
 *.spec 
-staticfiles/
 
 # Installer logs 
 pip-log.txt 
@@ -110,3 +109,4 @@ Control.ca-list
 Control.ca-bundle 
 Control.system-ca-bundle 
 GitHub.sublime-settings 
+/staticfiles/
