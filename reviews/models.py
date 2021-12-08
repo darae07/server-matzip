@@ -1,6 +1,8 @@
 from django.db import models
 from stores.models import Store
 from common.models import CommonUser
+import uuid
+import os
 
 
 # Create your models here.
@@ -18,8 +20,14 @@ class Review(models.Model):
         return self.title
 
 
+def unique_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = "%s.%s" % (uuid.uuid4(), ext)
+    return os.path.join('reviews/review', filename)
+
+
 class ReviewImage(models.Model):
-    image = models.ImageField(upload_to='reviews/review', default='')
+    image = models.ImageField(upload_to=unique_path, default='')
     review = models.ForeignKey(Review, related_name='images', on_delete=models.CASCADE, null=True)
 
 
