@@ -7,7 +7,7 @@ db.sqlite3
 media
 
 # 개발 단계
-#*/migrations/*
+*/migrations/*
 
 # Backup files # 
 *.bak 
