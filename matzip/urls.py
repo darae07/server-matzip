@@ -20,15 +20,15 @@ from django.conf.urls.static import static
 from common.views import GoogleLogin, google_token
 
 urlpatterns = [
-    path('stores/', include('stores.urls')),
-    path('reviews/', include('reviews.urls')),
-    path('groups/', include('group.urls')),
-    path('common/', include('common.urls')),
+    path('api/stores/', include('stores.urls')),
+    path('api/reviews/', include('reviews.urls')),
+    path('api/groups/', include('group.urls')),
+    path('api/common/', include('common.urls')),
     path('admin/', admin.site.urls),
-    path('dj-rest-auth/', include('dj_rest_auth.urls')),
-    path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
-    path('accounts/', include('allauth.urls')),
+    path('api/auth/', include('dj_rest_auth.urls')),
+    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('api/accounts/', include('allauth.urls')),
     # used to validate code & access tokens given by google and refresh google token
-    path('social-login/google/', google_token, name='google_login'),
+    path('api/social-login/google/', google_token, name='google_login'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
