@@ -1,23 +1,31 @@
 from django.db import models
 from stores.models import Store
 from common.models import CommonUser
+from stores.models import Category
 import uuid
 import os
+from django.contrib.gis.db.models import PointField
+from cloudinary.models import CloudinaryField
+from PIL import Image
 
 
 # Create your models here.
 class Review(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
     user = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
-    title = models.CharField(max_length=300)
-    content = models.TextField()
+    store_name = models.CharField(max_length=100, default='')
+    content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     star = models.PositiveSmallIntegerField(default=0)
     public = models.BooleanField(default=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
+    menu = models.CharField(max_length=100, null=True, blank=True)
+    price = models.IntegerField(default=0)
+    location = PointField(srid=4326, geography=True, blank=True, null=True)
+    address = models.CharField(max_length=300, null=True, blank=True)
 
     def __str__(self):
-        return self.title
+        return self.store_name
 
 
 def unique_path(instance, filename):
@@ -41,3 +49,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.content
+
+
+class Like(models.Model):
+    user = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='likes')
