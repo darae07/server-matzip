@@ -6,11 +6,11 @@ from rest_framework import serializers
 
 class FullUserSerializer(UserSerializer):
     # contract = serializers.SerializerMethodField('get_contract')
-    contract = ContractSerializer(many=True, read_only=True)
+    # contract = ContractSerializer(many=True, read_only=True)
 
     class Meta(UserSerializer.Meta):
         fields = ['id', 'email', 'last_login',
-                  'date_joined', 'nickname', 'image', 'status', 'phone_number', 'contract']
+                  'date_joined', 'nickname', 'image', 'status', 'phone_number']
 
     # def get_contract(self, instance):
     #     company = None
