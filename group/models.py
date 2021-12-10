@@ -1,9 +1,31 @@
+import os
+import uuid
+
 from django.db import models
 from stores.models import Store, Menu
 from django.contrib.gis.db.models import PointField
 
 
-# Create your models here.
+def unique_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = "%s.%s" % (uuid.uuid4(), ext)
+    return os.path.join('group/team', filename)
+
+
+class Team(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    image = models.ImageField(upload_to=unique_path, default='')
+    title = models.CharField(max_length=300, blank=True, null=True)
+
+
+class TeamMember(models.Model):
+    team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True, related_name='members')
+    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
+                             related_name='team_membership')
+    member_name = models.CharField(max_length=100, blank=True, null=True)
+    date_joined = models.DateField(auto_now_add=True, blank=True)
+
+
 class Company(models.Model):
     name = models.CharField(max_length=100, unique=True)
     location = PointField(srid=4326, geography=True, blank=True, null=True)
