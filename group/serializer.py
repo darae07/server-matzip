@@ -1,10 +1,26 @@
 from django.utils.dateparse import parse_datetime
-from .models import Company, Contract
+from .models import Company, Contract, Team, TeamMember
 from rest_framework import serializers
 from common.serializers import UserSerializer
 from .models import Vote, Party, Membership, Invite
 from stores.serializer import StoreSerializer
 from common.costume_serializers import FullUserSerializer
+
+
+class TeamMemberSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True, many=False)
+
+    class Meta:
+        model = TeamMember
+        fields = '__all__'
+
+
+class TeamSerializer(serializers.ModelSerializer):
+    # members = TeamMemberSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Team
+        fields = '__all__'
 
 
 class CompanySerializer(serializers.ModelSerializer):
