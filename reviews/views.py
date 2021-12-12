@@ -1,9 +1,10 @@
-from django.db.models import Subquery, OuterRef, Q
+from django.db.models import Subquery, OuterRef, Q, F, Prefetch
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from group.models import Contract, Company
 from .models import ReviewImage, Review, Comment
+from group.models import TeamMember
 from common.models import CommonUser
 from rest_framework import viewsets, status, pagination
 from .serializer import ReviewImageSerializer, ReviewSerializer, ReviewListSerializer,\
@@ -20,25 +21,30 @@ class ReviewViewSet(viewsets.ModelViewSet):
     company = None
 
     def get_queryset(self):
-        # 같은 회사 멤버이거나, 공개설정된 리뷰만 조회 가능
+
         queryset = Review.objects.all().order_by('-created_at')
 
         # is user joined company?
         user = self.request.user
+
         company = self.request.query_params.get('company')
-        if company:
-            queryset = queryset.filter(Q(public=True) | Q(user__contract__company=company))
-        else:
-            queryset = queryset.filter(public=True)
+        # if team_members:
+        #     queryset = queryset.filter(Q(public=True) | Q(user__in=team_members))
+        # else:
+        #     queryset = queryset.filter(public=True)
 
         return queryset
 
     def list(self, request):
         queryset = self.get_queryset()
-        store = request.query_params.get('store')
 
-        if store:
-            queryset = queryset.filter(store=store)
+        # 같은 팀 멤버이거나, 공개설정된 리뷰만 조회 가능
+        team = self.request.query_params.get('team')
+
+        if team:
+            queryset = queryset.prefetch_related(Prefetch('user',
+                                                          queryset=TeamMember.objects.filter(team=team),
+                                                          to_attr='team_member'))
 
         page = self.paginate_queryset(queryset)
         serializer = self.serializer_class(page, many=True)
