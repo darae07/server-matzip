@@ -25,6 +25,9 @@ class TeamMember(models.Model):
     member_name = models.CharField(max_length=100, blank=True, null=True)
     date_joined = models.DateField(auto_now_add=True, blank=True)
 
+    def __str__(self):
+        return self.member_name
+
 
 class Company(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -50,8 +53,9 @@ class Contract(models.Model):
 
 class Party(models.Model):
     name = models.CharField(max_length=100)
-    members = models.ManyToManyField('common.CommonUser', through='Membership')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
+    team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
+    # members = models.ManyToManyField('common.CommonUser', through='Membership')
+    # company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
     description = models.CharField(max_length=500, null=True, blank=True)
     date = models.DateTimeField(null=True, blank=True)
 
@@ -61,13 +65,14 @@ class Party(models.Model):
 
 class Membership(models.Model):
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
+    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='membership')
     date_joined = models.DateField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
     status = models.SmallIntegerField(default=1)
 
     def __str__(self):
-        return self.user.email
+        return self.team_member.member_name
 
 
 class Vote(models.Model):
@@ -80,12 +85,13 @@ class Vote(models.Model):
 
 
 class Invite(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, )
-    sender = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
+    party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
+    sender = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
                                related_name='sender')
-    receiver = models.OneToOneField('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
+    receiver = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
                                     related_name='receiver')
     date_invited = models.DateField(auto_now_add=True, blank=True)
+    status = models.SmallIntegerField(default=2)
 
     def __str__(self):
-        return self.receiver.email
+        return self.receiver.member_name

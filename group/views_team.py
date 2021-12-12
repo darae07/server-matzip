@@ -18,7 +18,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     @action(detail=True)
     def members(self, request, pk=None):
-        members = TeamMember.Objects.filter(team=pk)
+        members = TeamMember.objects.filter(team=pk)
         page = self.paginate_queryset(members)
         if page is not None:
             serializer = TeamMemberSerializer(page, many=True)

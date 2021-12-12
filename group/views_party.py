@@ -25,16 +25,20 @@ class PartyViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        company = self.request.query_params.get('company')
-
-        user = CommonUser.objects.prefetch_related(Prefetch('contract',
-                                                            queryset=Contract.objects.filter(company=company)))
-        membership = Membership.objects.prefetch_related(Prefetch('user', queryset=user,
-                                                                  to_attr='prefetched_contracts'))
-        return queryset.prefetch_related(Prefetch('membership', queryset=membership, to_attr='prefetched_membership'))
+        # company = self.request.query_params.get('company')
+        #
+        # user = CommonUser.objects.prefetch_related(Prefetch('contract',
+        #                                                     queryset=Contract.objects.filter(company=company)))
+        # membership = Membership.objects.prefetch_related(Prefetch('user', queryset=user,
+        #                                                           to_attr='prefetched_contracts'))
+        # return queryset.prefetch_related(Prefetch('membership', queryset=membership, to_attr='prefetched_membership'))
+        return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.queryset
+        queryset = self.queryset.order_by('id')
+        team = self.request.query_params.get('team')
+        if team:
+            queryset = queryset.filter(team=team)
         page = self.paginate_queryset(queryset)
         serializer = PartyListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
@@ -51,12 +55,12 @@ class MembershipViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = self.queryset.filter(user=user)
+        queryset = self.queryset
 
-        company = self.request.query_params.get('company')
+        # company = self.request.query_params.get('company')
         state = self.request.query_params.get('state')
-        if company:
-            queryset = queryset.filter(user__contract__company=company)
+        # if company:
+        #     queryset = queryset.filter(user__contract__company=company)
         if state:
             queryset = queryset.filter(status=state)
 
@@ -78,7 +82,7 @@ class MembershipViewSet(viewsets.ModelViewSet):
         party = data['party']
         user = data['user']
 
-        same_membership = Membership.objects.filter(user=user, party=party)
+        same_membership = Membership.objects.filter(team_member__user=user, party=party)
         if same_membership:
             return Response({'message': 'the same membership exists'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -90,6 +94,16 @@ class MembershipViewSet(viewsets.ModelViewSet):
             return Response({'id': membership.pk}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        data = request.data
+
+        instance = Membership.objects.get(pk=pk)
+        serializer = MembershipCreateSerializer(instance, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save(**serializer.validated_data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VoteViewSet(viewsets.ModelViewSet):

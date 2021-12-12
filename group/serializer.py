@@ -15,14 +15,6 @@ class TeamMemberSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class TeamSerializer(serializers.ModelSerializer):
-    # members = TeamMemberSerializer(read_only=True, many=True)
-
-    class Meta:
-        model = Team
-        fields = '__all__'
-
-
 class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -63,7 +55,8 @@ class VoteSerializer(serializers.ModelSerializer):
 
 class MembershipSerializer(serializers.ModelSerializer):
     user = FullUserSerializer(read_only=True, many=False)
-    vote = VoteSerializer(read_only=True, many=False)
+    team_member = TeamMemberSerializer(read_only=True, many=False)
+    # vote = VoteSerializer(read_only=True, many=False)
 
     class Meta:
         model = Membership
@@ -78,9 +71,8 @@ class MembershipCreateSerializer(serializers.ModelSerializer):
 
 
 class PartyListSerializer(serializers.ModelSerializer):
-    company = CompanySerializer(read_only=True, many=False)
     membership = MembershipSerializer(read_only=True, many=True)
-    votes = VoteSerializer(read_only=True, many=False)
+    # votes = VoteSerializer(read_only=True, many=False)
 
     class Meta:
         model = Party
@@ -88,7 +80,7 @@ class PartyListSerializer(serializers.ModelSerializer):
 
 
 class PartySerializer(serializers.ModelSerializer):
-    members = MembershipSerializer(read_only=True, many=True)
+    # members = MembershipSerializer(read_only=True, many=True)
 
     class Meta:
         model = Party
@@ -103,7 +95,6 @@ class PartySerializer(serializers.ModelSerializer):
         return Party.objects.create(**data)
 
     def update(self, instance, validated_data):
-        instance.company = validated_data.get('company', instance.company)
         instance.name = validated_data.get('name', instance.name)
         instance.description = validated_data.get('description', instance.description)
         instance.date = parse_datetime(self.data['date'])
@@ -111,9 +102,17 @@ class PartySerializer(serializers.ModelSerializer):
         return instance
 
 
+class TeamSerializer(serializers.ModelSerializer):
+    party = PartyListSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Team
+        fields = '__all__'
+
+
 class InviteSerializer(serializers.ModelSerializer):
-    company = CompanySerializer(read_only=True, many=False)
-    sender = UserSerializer(read_only=True, many=False)
+    team = TeamSerializer(read_only=True, many=False)
+    sender = TeamMemberSerializer(read_only=True, many=False)
 
     class Meta:
         model = Invite
@@ -121,7 +120,9 @@ class InviteSerializer(serializers.ModelSerializer):
 
 
 class InviteCreateSerializer(serializers.ModelSerializer):
-    # company = serializers.RelatedField(read_only=True, required=True)
+    party = PartySerializer(read_only=True, many=False)
+    party_id = serializers.IntegerField(write_only=True)
+    # team = serializers.RelatedField(read_only=True, required=True)
     # sender = serializers.RelatedField(read_only=True, required=True)
 
     class Meta:

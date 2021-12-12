@@ -11,13 +11,14 @@
 # c - 회사 - 유저 동일한 항목은 유일해야함
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Company, Contract, Invite
+from .models import Company, Contract, Invite, Party
 from rest_framework import viewsets, status
-from .serializer import CompanySerializer, ContractSerializer, InviteSerializer, InviteCreateSerializer
+from .serializer import CompanySerializer, ContractSerializer, InviteSerializer, InviteCreateSerializer, MembershipCreateSerializer
 from django.db.models import Q, Prefetch
 from common.models import CommonUser
 from common.costume_serializers import FullUserSerializer
 from django.contrib.gis.geos import Point
+from rest_framework.exceptions import APIException
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
@@ -108,36 +109,54 @@ class ContractViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+# 파티 초대 기능
 class InviteViewSet(viewsets.ModelViewSet):
     queryset = Invite.objects.all()
     serializer_class = InviteSerializer
 
     def get_queryset(self):
         user = self.request.user
-        queryset = self.queryset.filter(receiver=user)
+        queryset = self.queryset.filter(receiver__user=user)
         return queryset
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        user = request.user
-        data['sender'] = user.id
+        print(data)
 
-        same_contract = Contract.objects.filter(Q(user=data['receiver']) & Q(company=data['company']))
-        if same_contract:
-            return Response({'message': 'the same contract exists'},
-                            status=status.HTTP_406_NOT_ACCEPTABLE)
-
-        same_invite = Invite.objects.filter(Q(receiver=data['receiver']) & Q(company=data['company']))
+        same_invite = Invite.objects.filter(Q(receiver=data['receiver']) & Q(party=data['party']))
         if same_invite:
-            return Response({'message': 'the same invite exists'},
-                            status=status.HTTP_406_NOT_ACCEPTABLE)
+            raise APIException('이미 초대된 회원입니다.')
 
+        data['party_id'] = data['party']
         serializer = InviteCreateSerializer(data=data)
         if serializer.is_valid():
             invite = Invite.objects.create(**serializer.validated_data)
             invite.save()
             print(serializer.data)
-            return Response({'id': invite.id}, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def accept(self, request, pk=None):
+        instance = self.get_object()
+        if instance.status == 1:
+            raise APIException('이미 승인된 초대입니다.')
+        membership = MembershipCreateSerializer(data={'team_member': instance.receiver.id, 'party': instance.party.id})
+        if membership.is_valid():
+            membership.save()
+            instance.status = 1
+            instance.save()
+            return Response(membership.data, status=status.HTTP_200_OK)
+        return Response(membership.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        data = request.data
+        invite = Invite.objects.get(pk=pk)
+        serializer = self.serializer_class(invite, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save(**serializer.validated_data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
