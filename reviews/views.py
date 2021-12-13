@@ -28,6 +28,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         company = self.request.query_params.get('company')
+
         # if team_members:
         #     queryset = queryset.filter(Q(public=True) | Q(user__in=team_members))
         # else:
@@ -40,12 +41,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         # 같은 팀 멤버이거나, 공개설정된 리뷰만 조회 가능
         team = self.request.query_params.get('team')
-
+        team_member = TeamMember.objects.filter(team=team)
+        team_member_user_id = team_member.values('user')
         if team:
             queryset = queryset.prefetch_related(Prefetch('user',
-                                                          queryset=TeamMember.objects.filter(team=team),
+                                                          queryset=team_member,
                                                           to_attr='team_member'))
 
+            queryset = queryset.filter(Q(public=True) | Q(user__in=team_member_user_id))
+        else:
+            queryset = queryset.filter(Q(public=True))
         page = self.paginate_queryset(queryset)
         serializer = self.serializer_class(page, many=True)
         return self.get_paginated_response(serializer.data)
