@@ -6,9 +6,9 @@
 # r - 나의 계약 목록
 # c - 회사 - 유저 동일한 항목은 유일해야함
 
-# invite
+# invite -> 파티 초대로 변경
 # r - 나의 초대 목록
-# c - 회사 - 유저 동일한 항목은 유일해야함
+# c - 파티 - 유저 동일한 항목은 유일해야함
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Company, Contract, Invite, Party
