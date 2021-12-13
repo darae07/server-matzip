@@ -65,3 +65,27 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['post'])
+@permission_classes((permissions.AllowAny,))
+@parser_classes([MultiPartParser, FormParser])
+def upload_team_member_image(request):
+    if request.data['team_member']:
+        request.data.team_member = request.data['team_member']
+    if request.FILES:
+        request.data.image = request.FILES
+    team_member = TeamMember.objects.get(pk=request.data.team_member)
+    serializer = TeamMemberSerializer(team_member, data=request.data, partial=True)
+    serializer.is_valid(raise_exception=True)
+    serializer.save(**serializer.validated_data)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['post'])
+@permission_classes((permissions.AllowAny,))
+def delete_team_member_image(request, pk):
+    team_member = TeamMember.objects.get(pk=pk)
+    team_member.image.delete()
+    team_member.save()
+    return Response(data={'id': team_member.id}, status=status.HTTP_200_OK)
+
