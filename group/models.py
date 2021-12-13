@@ -12,10 +12,17 @@ def unique_path(instance, filename):
     return os.path.join('group/team', filename)
 
 
+def unique_path2(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = "%s.%s" % (uuid.uuid4(), ext)
+    return os.path.join('group/team/member', filename)
+
+
 class Team(models.Model):
     name = models.CharField(max_length=100, unique=True)
     image = models.ImageField(upload_to=unique_path, default='')
     title = models.CharField(max_length=300, blank=True, null=True)
+    join_code = models.CharField(max_length=6, editable=False, default=uuid.uuid1())
 
 
 class TeamMember(models.Model):
@@ -24,6 +31,8 @@ class TeamMember(models.Model):
                              related_name='team_membership')
     member_name = models.CharField(max_length=100, blank=True, null=True)
     date_joined = models.DateField(auto_now_add=True, blank=True)
+    image = models.ImageField(upload_to=unique_path2, default='')
+    title = models.CharField(max_length=300, blank=True, null=True)
 
     def __str__(self):
         return self.member_name
