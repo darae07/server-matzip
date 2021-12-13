@@ -9,6 +9,7 @@ from common.models import CommonUser
 from rest_framework import viewsets, status, pagination
 from .serializer import ReviewImageSerializer, ReviewSerializer, ReviewListSerializer,\
     CommentSerializer, CommentListSerializer
+from django.contrib.gis.geos import Point
 
 
 # Create your views here.
@@ -58,6 +59,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         data['user'] = request.user.id
+        lon = request.data['lon']
+        lat = request.data['lat']
+
+        if lon and lat:
+            data['location'] = Point(float(lon), float(lat))
         serializer = ReviewSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
