@@ -11,6 +11,7 @@
 # c -
 from django.db.models import Prefetch
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Party, Membership, Vote, Contract
 from common.models import CommonUser
@@ -22,6 +23,7 @@ from .serializer import PartySerializer, PartyListSerializer, MembershipSerializ
 class PartyViewSet(viewsets.ModelViewSet):
     queryset = Party.objects.all()
     serializer_class = PartySerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = self.queryset
@@ -52,6 +54,7 @@ class PartyViewSet(viewsets.ModelViewSet):
 class MembershipViewSet(viewsets.ModelViewSet):
     queryset = Membership.objects.all()
     serializer_class = MembershipCreateSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -109,6 +112,7 @@ class MembershipViewSet(viewsets.ModelViewSet):
 class VoteViewSet(viewsets.ModelViewSet):
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = self.queryset

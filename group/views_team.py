@@ -1,5 +1,6 @@
 from django.http import Http404
 from rest_framework.decorators import action, api_view, parser_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import TeamMember, Team
 from rest_framework import viewsets, status, permissions
@@ -13,6 +14,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        print(user)
         membership = TeamMember.objects.filter(user=user.id).values('team')
         queryset = self.queryset.filter(id__in=membership)
         return queryset

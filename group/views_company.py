@@ -10,6 +10,7 @@
 # r - 나의 초대 목록
 # c - 파티 - 유저 동일한 항목은 유일해야함
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Company, Contract, Invite, Party
 from rest_framework import viewsets, status
@@ -113,6 +114,7 @@ class ContractViewSet(viewsets.ModelViewSet):
 class InviteViewSet(viewsets.ModelViewSet):
     queryset = Invite.objects.all()
     serializer_class = InviteSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
