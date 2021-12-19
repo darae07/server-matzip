@@ -42,12 +42,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         # 같은 팀 멤버이거나, 공개설정된 리뷰만 조회 가능
         team = self.request.query_params.get('team')
-        team_member = TeamMember.objects.filter(team=team)
-        team_member_user_id = team_member.values('user')
         if team:
+            team_member = TeamMember.objects.filter(team=team)
+            team_member_user_id = team_member.values('user')
+            comments = Comment.objects.filter(parent_comment__isnull=True)
+            comments = comments.prefetch_related(Prefetch('user', queryset=team_member, to_attr='team_member'))
             queryset = queryset.prefetch_related(Prefetch('user',
                                                           queryset=team_member,
                                                           to_attr='team_member'))
+            queryset = queryset.prefetch_related(Prefetch('comments',
+                                                          queryset=comments,
+                                                          ))
 
             queryset = queryset.filter(Q(public=True) | Q(user__in=team_member_user_id))
         else:
@@ -113,6 +118,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Comment.objects.filter(parent_comment=None).order_by('-created_at')
         return queryset
+
+    def list(self, request):
+        queryset = self.queryset
+        team = self.request.query_params.get('team')
+        team_member = TeamMember.objects.filter(team=team)
+        if team:
+            queryset = queryset.prefetch_related(Prefetch('user',  queryset=team_member, to_attr='team_member'))
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         data = request.data
