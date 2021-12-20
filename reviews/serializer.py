@@ -1,8 +1,4 @@
-from collections import OrderedDict
-
 from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
-
 from .models import Review, ReviewImage, Comment
 from common.costume_serializers import FullUserSerializer
 from group.serializer import TeamMemberSerializer
@@ -27,10 +23,23 @@ class CommentSerializer(serializers.ModelSerializer):
 class CommentListSerializer(CommentSerializer):
     user = FullUserSerializer(read_only=True)
     child_comments = serializers.SerializerMethodField()
-    team_member = TeamMemberSerializer(read_only=True, many=False)
+    team_member = serializers.SerializerMethodField('get_team_member')
 
     class Meta(CommentSerializer.Meta):
         fields = '__all__'
+
+    def get_team_member(self, instance):
+        if self.context['request']:
+            team = self.context['request'].query_params.get('team')
+            if team:
+                try:
+                    team_member = TeamMember.objects.get(team=team, user=instance.user)
+                except TeamMember.DoesNotExist:
+                    team_member = None
+                if team_member:
+                    serializer = TeamMemberSerializer(instance=team_member, read_only=True)
+                    return serializer.data
+        return None
 
     def get_child_comments(self, instance):
         serializer = self.__class__(instance.child_comments, many=True)
@@ -46,8 +55,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class ReviewListSerializer(ReviewSerializer):
     images = ReviewImageSerializer(read_only=True, many=True)
-    comments = CommentListSerializer(read_only=True, many=True)
-    # comments = serializers.SerializerMethodField('get_comments')
+    comments = serializers.SerializerMethodField('get_comments')
     user = FullUserSerializer(read_only=True)
     team_member = TeamMemberSerializer(read_only=True, many=False)
     requires_context = True
@@ -56,7 +64,7 @@ class ReviewListSerializer(ReviewSerializer):
         fields = '__all__'
 
     def get_comments(self, instance):
-        print(self.context)
+        print(self.context['request'].query_params.get('team'))
         comments = Comment.objects.filter(parent_comment=None, parent_post=instance).order_by('-created_at')
-        serializer = CommentListSerializer(instance=comments, many=True)
+        serializer = CommentListSerializer(instance=comments, many=True, context={'request': self.context['request']})
         return serializer.data

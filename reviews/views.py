@@ -2,10 +2,8 @@ from django.db.models import Subquery, OuterRef, Q, F, Prefetch
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from group.models import Contract, Company
 from .models import ReviewImage, Review, Comment
 from group.models import TeamMember
-from common.models import CommonUser
 from rest_framework import viewsets, status, pagination
 from .serializer import ReviewImageSerializer, ReviewSerializer, ReviewListSerializer,\
     CommentSerializer, CommentListSerializer
@@ -21,20 +19,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     company = None
 
+    def get_serializer_context(self):
+        context = super(ReviewViewSet, self).get_serializer_context()
+        context.update({'request': self.request})
+        return context
+
     def get_queryset(self):
-
         queryset = Review.objects.all().order_by('-created_at')
-
-        # is user joined company?
-        user = self.request.user
-
-        company = self.request.query_params.get('company')
-
-        # if team_members:
-        #     queryset = queryset.filter(Q(public=True) | Q(user__in=team_members))
-        # else:
-        #     queryset = queryset.filter(public=True)
-
         return queryset
 
     def list(self, request):
@@ -45,20 +36,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if team:
             team_member = TeamMember.objects.filter(team=team)
             team_member_user_id = team_member.values('user')
-            comments = Comment.objects.filter(parent_comment__isnull=True)
-            comments = comments.prefetch_related(Prefetch('user', queryset=team_member, to_attr='team_member'))
             queryset = queryset.prefetch_related(Prefetch('user',
                                                           queryset=team_member,
                                                           to_attr='team_member'))
-            queryset = queryset.prefetch_related(Prefetch('comments',
-                                                          queryset=comments,
-                                                          ))
 
             queryset = queryset.filter(Q(public=True) | Q(user__in=team_member_user_id))
         else:
             queryset = queryset.filter(Q(public=True))
         page = self.paginate_queryset(queryset)
-        serializer = self.serializer_class(page, many=True)
+        serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -115,17 +101,18 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentListSerializer
 
+    def get_serializer_context(self):
+        context = super(CommentViewSet, self).get_serializer_context()
+        context.update({'request': self.request})
+        return context
+
     def get_queryset(self):
         queryset = Comment.objects.filter(parent_comment=None).order_by('-created_at')
         return queryset
 
     def list(self, request):
         queryset = self.queryset
-        team = self.request.query_params.get('team')
-        team_member = TeamMember.objects.filter(team=team)
-        if team:
-            queryset = queryset.prefetch_related(Prefetch('user',  queryset=team_member, to_attr='team_member'))
-        serializer = self.serializer_class(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
