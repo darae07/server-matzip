@@ -20,6 +20,7 @@ from common.models import CommonUser
 from common.costume_serializers import FullUserSerializer
 from django.contrib.gis.geos import Point
 from rest_framework.exceptions import APIException
+from .constants import InviteStatus
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
@@ -127,7 +128,8 @@ class InviteViewSet(viewsets.ModelViewSet):
 
         same_invite = Invite.objects.filter(Q(receiver=data['receiver']) & Q(party=data['party']))
         if same_invite:
-            raise APIException('이미 초대된 회원입니다.')
+            return Response({'message': '이미 초대된 회원입니다.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         data['party_id'] = data['party']
         serializer = InviteCreateSerializer(data=data)
@@ -143,12 +145,13 @@ class InviteViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):
         instance = self.get_object()
-        if instance.status == 1:
-            raise APIException('이미 승인된 초대입니다.')
+        if instance.status == InviteStatus.ACCEPTED.value:
+            return Response({'message': '이미 승인된 초대입니다.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         membership = MembershipCreateSerializer(data={'team_member': instance.receiver.id, 'party': instance.party.id})
         if membership.is_valid():
             membership.save()
-            instance.status = 1
+            instance.status = InviteStatus.ACCEPTED.value
             instance.save()
             return Response(membership.data, status=status.HTTP_200_OK)
         return Response(membership.errors, status=status.HTTP_400_BAD_REQUEST)
