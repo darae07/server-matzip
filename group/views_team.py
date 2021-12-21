@@ -2,9 +2,10 @@ from django.http import Http404
 from rest_framework.decorators import action, api_view, parser_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from common.models import CommonUser
 from .models import TeamMember, Team
 from rest_framework import viewsets, status, permissions
-from .serializer import TeamMemberSerializer, TeamSerializer
+from .serializer import TeamMemberSerializer, TeamSerializer, TeamMemberCreateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
@@ -77,6 +78,37 @@ def delete_team_image(request, pk):
 class TeamMemberViewSet(viewsets.ModelViewSet):
     queryset = TeamMember.objects.all()
     serializer_class = TeamMemberSerializer
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        if 'user' not in data:
+            return Response({'message': '유저를 입력해야 합니다.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = CommonUser.objects.get(pk=data['user'])
+        except CommonUser.DoesNotExist:
+            user = None
+        if not user:
+            return Response({'message': '존재하지 않는 유저입니다.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            same_user = TeamMember.objects.get(user=data['user'], team=data['team'])
+        except TeamMember.DoesNotExist:
+            same_user = None
+        if same_user:
+            return Response({'message': '이미 가입된 유저입니다.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if 'member_name' not in data or data['member_name'] is None:
+            return Response({'message': '유저 이름을 입력해주세요.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        data[user] = user
+        serializer = TeamMemberCreateSerializer(data=data)
+        if serializer.is_valid():
+            team_member = TeamMember.objects.create(**serializer.validated_data)
+            team_member.save()
+            return Response({**serializer.data, 'message': '팀에 가입되었습니다.'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk, *args, **kwargs):
         data = request.data

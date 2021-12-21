@@ -12,6 +12,15 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamMember
+        read_only_fields = ['user']
+        fields = '__all__'
+
+
+class TeamMemberCreateSerializer(serializers.ModelSerializer):
+    # user = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+
+    class Meta:
+        model = TeamMember
         fields = '__all__'
 
 
