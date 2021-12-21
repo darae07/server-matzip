@@ -101,6 +101,13 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
         if 'member_name' not in data or data['member_name'] is None:
             return Response({'message': '유저 이름을 입력해주세요.'},
                             status=status.HTTP_400_BAD_REQUEST)
+        try:
+            member = TeamMember.objects.get(member_name=data['member_name'])
+        except TeamMember.DoesNotExist:
+            member = None
+        if member:
+            return Response({'message': '이미 사용중인 이름입니다.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         data[user] = user
         serializer = TeamMemberCreateSerializer(data=data)
         if serializer.is_valid():
