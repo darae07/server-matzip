@@ -1,8 +1,21 @@
 from rest_framework import serializers
-from .models import Review, ReviewImage, Comment
+from .models import Review, ReviewImage, Comment, Like
 from common.costume_serializers import FullUserSerializer
 from group.serializer import TeamMemberSerializer
 from group.models import TeamMember
+from .constants import LikeStatus
+
+
+def get_team_member(team, instance):
+    if team:
+        try:
+            team_member = TeamMember.objects.get(team=team, user=instance.user)
+        except TeamMember.DoesNotExist:
+            team_member = None
+        if team_member:
+            serializer = TeamMemberSerializer(instance=team_member, read_only=True)
+            return serializer.data
+    return None
 
 
 class ReviewImageSerializer(serializers.ModelSerializer):
@@ -32,19 +45,34 @@ class CommentListSerializer(CommentSerializer):
         if self.context['request']:
             team = self.context['request'].query_params.get('team')
             if team:
-                try:
-                    team_member = TeamMember.objects.get(team=team, user=instance.user)
-                except TeamMember.DoesNotExist:
-                    team_member = None
-                if team_member:
-                    serializer = TeamMemberSerializer(instance=team_member, read_only=True)
-                    return serializer.data
+                return get_team_member(team, instance)
         return None
 
     def get_child_comments(self, instance):
         serializer = self.__class__(instance.child_comments, many=True)
         serializer.bind('', self)
         return serializer.data
+
+
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = '__all__'
+
+
+class LikeInReviewListSerializer(LikeSerializer):
+    user = FullUserSerializer(read_only=True)
+    team_member = serializers.SerializerMethodField('get_team_member')
+
+    class Meta(LikeSerializer.Meta):
+        fields = '__all__'
+
+    def get_team_member(self, instance):
+        if self.context['request']:
+            team = self.context['request'].query_params.get('team')
+            if team:
+                return get_team_member(team, instance)
+        return None
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -68,3 +96,11 @@ class ReviewListSerializer(ReviewSerializer):
         comments = Comment.objects.filter(parent_comment=None, parent_post=instance).order_by('-created_at')
         serializer = CommentListSerializer(instance=comments, many=True, context={'request': self.context['request']})
         return serializer.data
+
+
+class LikeListSerializer(LikeInReviewListSerializer):
+    review = ReviewListSerializer(read_only=True, many=False)
+
+    class Meta(LikeInReviewListSerializer.Meta):
+        fields = '__all__'
+
