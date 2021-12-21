@@ -7,6 +7,7 @@ import os
 from django.contrib.gis.db.models import PointField
 from cloudinary.models import CloudinaryField
 from PIL import Image
+from .constants import LikeStatus
 
 
 # Create your models here.
@@ -54,3 +55,4 @@ class Comment(models.Model):
 class Like(models.Model):
     user = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='likes')
+    status = models.SmallIntegerField(default=LikeStatus.ACTIVE.value)
