@@ -6,6 +6,7 @@ from stores.models import Store, Menu
 from django.contrib.gis.db.models import PointField
 import os
 import hashlib
+from .constants import InviteStatus, MembershipStatus
 
 
 def unique_path(instance, filename):
@@ -84,7 +85,7 @@ class Membership(models.Model):
     party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='membership')
     date_joined = models.DateField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
-    status = models.SmallIntegerField(default=1)
+    status = models.SmallIntegerField(default=MembershipStatus.ALLOWED.value)
 
     def __str__(self):
         return self.team_member.member_name
@@ -106,7 +107,7 @@ class Invite(models.Model):
     receiver = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
                                     related_name='receiver')
     date_invited = models.DateField(auto_now_add=True, blank=True)
-    status = models.SmallIntegerField(default=2)
+    status = models.SmallIntegerField(default=InviteStatus.WAITING.value)
 
     def __str__(self):
         return self.receiver.member_name
