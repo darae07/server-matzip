@@ -86,6 +86,7 @@ class ReviewListSerializer(ReviewSerializer):
     user = FullUserSerializer(read_only=True)
     team_member = serializers.SerializerMethodField('get_team_member')
     requires_context = True
+    likes = serializers.SerializerMethodField('get_likes')
 
     class Meta(ReviewSerializer.Meta):
         fields = '__all__'
@@ -96,6 +97,11 @@ class ReviewListSerializer(ReviewSerializer):
             if team:
                 return get_team_member(team, instance)
         return None
+
+    def get_likes(self, instance):
+        likes = Like.objects.filter(status=LikeStatus.ACTIVE.value, review=instance).order_by('-created_at')
+        serializer = LikeSerializer(instance=likes, many=True)
+        return serializer.data
 
 
 class ReviewRetrieveSerializer(ReviewListSerializer):
@@ -108,6 +114,11 @@ class ReviewRetrieveSerializer(ReviewListSerializer):
         print(self.context['request'].query_params.get('team'))
         comments = Comment.objects.filter(parent_comment=None, parent_post=instance).order_by('-created_at')
         serializer = CommentListSerializer(instance=comments, many=True, context={'request': self.context['request']})
+        return serializer.data
+
+    def get_likes(self, instance):
+        likes = Like.objects.filter(status=LikeStatus.ACTIVE.value, review=instance).order_by('-created_at')
+        serializer = LikeInReviewListSerializer(instance=likes, many=True)
         return serializer.data
 
 
