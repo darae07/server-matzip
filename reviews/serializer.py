@@ -111,14 +111,13 @@ class ReviewRetrieveSerializer(ReviewListSerializer):
         fields = '__all__'
 
     def get_comments(self, instance):
-        print(self.context['request'].query_params.get('team'))
         comments = Comment.objects.filter(parent_comment=None, parent_post=instance).order_by('-created_at')
         serializer = CommentListSerializer(instance=comments, many=True, context={'request': self.context['request']})
         return serializer.data
 
     def get_likes(self, instance):
         likes = Like.objects.filter(status=LikeStatus.ACTIVE.value, review=instance).order_by('-created_at')
-        serializer = LikeInReviewListSerializer(instance=likes, many=True)
+        serializer = LikeInReviewListSerializer(instance=likes, many=True, context={'request': self.context['request']})
         return serializer.data
 
 
