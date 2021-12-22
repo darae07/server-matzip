@@ -83,12 +83,25 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class ReviewListSerializer(ReviewSerializer):
     images = ReviewImageSerializer(read_only=True, many=True)
-    comments = serializers.SerializerMethodField('get_comments')
     user = FullUserSerializer(read_only=True)
-    team_member = TeamMemberSerializer(read_only=True, many=False)
+    team_member = serializers.SerializerMethodField('get_team_member')
     requires_context = True
 
     class Meta(ReviewSerializer.Meta):
+        fields = '__all__'
+
+    def get_team_member(self, instance):
+        if self.context['request']:
+            team = self.context['request'].query_params.get('team')
+            if team:
+                return get_team_member(team, instance)
+        return None
+
+
+class ReviewRetrieveSerializer(ReviewListSerializer):
+    comments = serializers.SerializerMethodField('get_comments')
+
+    class Meta(ReviewListSerializer.Meta):
         fields = '__all__'
 
     def get_comments(self, instance):

@@ -6,14 +6,17 @@ from .models import ReviewImage, Review, Comment
 from group.models import TeamMember
 from rest_framework import viewsets, status, pagination
 from .serializer import ReviewImageSerializer, ReviewSerializer, ReviewListSerializer,\
-    CommentSerializer, CommentListSerializer
+    ReviewRetrieveSerializer ,CommentSerializer, CommentListSerializer
 from django.contrib.gis.geos import Point
 
 
 # Create your views here.
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
-    serializer_class = ReviewListSerializer
+    serializer_class = {
+        'list': ReviewListSerializer,
+        'retrieve': ReviewRetrieveSerializer
+    }
     pagination_class = PageNumberPagination
     pagination_class.page_size = 5
     ordering = ['-created_at']
@@ -23,6 +26,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         context = super(ReviewViewSet, self).get_serializer_context()
         context.update({'request': self.request})
         return context
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return self.serializer_class['list']
+        if self.action == 'retrieve':
+            return self.serializer_class['retrieve']
 
     def get_queryset(self):
         queryset = Review.objects.all().order_by('-created_at')
@@ -36,9 +45,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if team:
             team_member = TeamMember.objects.filter(team=team)
             team_member_user_id = team_member.values('user')
-            queryset = queryset.prefetch_related(Prefetch('user',
-                                                          queryset=team_member,
-                                                          to_attr='team_member'))
+            # queryset = queryset.prefetch_related(Prefetch('user__team_membership',
+            #                                               queryset=team_member,
+            #                                               to_attr='team_member'))
 
             queryset = queryset.filter(Q(public=True) | Q(user__in=team_member_user_id))
         else:
