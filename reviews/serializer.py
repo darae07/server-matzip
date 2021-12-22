@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Review, ReviewImage, Comment, Like
 from common.costume_serializers import FullUserSerializer
-from group.serializer import TeamMemberSerializer
+from group.serializer import TeamMemberSerializer, TeamMemberCreateSerializer
 from group.models import TeamMember
 from .constants import LikeStatus
 
@@ -13,7 +13,7 @@ def get_team_member(team, instance):
         except TeamMember.DoesNotExist:
             team_member = None
         if team_member:
-            serializer = TeamMemberSerializer(instance=team_member, read_only=True)
+            serializer = TeamMemberCreateSerializer(instance=team_member, read_only=True)
             return serializer.data
     return None
 
