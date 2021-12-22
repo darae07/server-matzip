@@ -56,3 +56,4 @@ class Like(models.Model):
     user = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='likes')
     status = models.SmallIntegerField(default=LikeStatus.ACTIVE.value)
+    created_at = models.DateTimeField(auto_now_add=True)
