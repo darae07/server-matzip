@@ -13,11 +13,12 @@ from django.db.models import Prefetch
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Party, Membership, Vote, Contract
+from .models import Party, Membership, Vote, Tag, TeamMember
 from common.models import CommonUser
 from rest_framework import viewsets, status
 from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \
-    MembershipCreateSerializer, VoteListSerializer
+    MembershipCreateSerializer, VoteListSerializer, TagCreateSerializer, TagSerializer
+from matzip.handler import request_data_handler
 
 
 class PartyViewSet(viewsets.ModelViewSet):
@@ -131,3 +132,37 @@ class VoteViewSet(viewsets.ModelViewSet):
         vote = get_object_or_404(self.queryset, pk=pk)
         serializer = VoteListSerializer(vote)
         return Response(serializer.data)
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = self.queryset
+        party = self.request.query_params.get('party')
+        if party:
+            queryset = queryset.filter(party=party)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset
+        page = self.paginate_queryset(queryset)
+        serializer = self.serializer_class(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        data = request_data_handler(request.data, ['party', 'review'])
+        party = Party.objects.get(pk=data['party'])
+        team_member = TeamMember.objects.get(user=user, team=party.team)
+        data['team_member'] = team_member.pk
+
+        same_tag = Tag.objects.filter(team_member=data['team_member'], party=data['party'], review=data['review'])
+        if same_tag:
+            return Response({'message': '동일한 태그가 이미 존재합니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        serializer = TagCreateSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)

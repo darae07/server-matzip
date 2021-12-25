@@ -2,7 +2,7 @@ from django.utils.dateparse import parse_datetime
 from .models import Company, Contract, Team, TeamMember
 from rest_framework import serializers
 from common.serializers import UserSerializer
-from .models import Vote, Party, Membership, Invite
+from .models import Vote, Party, Membership, Invite, Tag
 from stores.serializer import StoreSerializer
 from common.costume_serializers import FullUserSerializer
 
@@ -136,4 +136,19 @@ class InviteCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Invite
+        fields = '__all__'
+
+
+class TagSerializer(serializers.ModelSerializer):
+    party = PartySerializer(read_only=True, many=False)
+    team_member = TeamMemberSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
+class TagCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
         fields = '__all__'
