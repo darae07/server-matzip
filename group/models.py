@@ -111,3 +111,9 @@ class Invite(models.Model):
 
     def __str__(self):
         return self.receiver.member_name
+
+
+class Tag(models.Model):
+    party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, )
+    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
+    review = models.ForeignKey('reviews.Review', on_delete=models.CASCADE, null=True, blank=True)
