@@ -79,8 +79,23 @@ class MembershipCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TagSerializer(serializers.ModelSerializer):
+    team_member = TeamMemberSerializer(read_only=True, many=False)
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
+class TagCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
 class PartyListSerializer(serializers.ModelSerializer):
     membership = MembershipSerializer(read_only=True, many=True)
+    tags = TagSerializer(read_only=True, many=True)
     # votes = VoteSerializer(read_only=True, many=False)
 
     class Meta:
@@ -139,16 +154,4 @@ class InviteCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class TagSerializer(serializers.ModelSerializer):
-    party = PartySerializer(read_only=True, many=False)
-    team_member = TeamMemberSerializer(read_only=True, many=True)
 
-    class Meta:
-        model = Tag
-        fields = '__all__'
-
-
-class TagCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = '__all__'

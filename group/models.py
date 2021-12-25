@@ -114,6 +114,6 @@ class Invite(models.Model):
 
 
 class Tag(models.Model):
-    party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, )
+    party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='tags')
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey('reviews.Review', on_delete=models.CASCADE, null=True, blank=True)
