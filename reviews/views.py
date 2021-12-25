@@ -61,8 +61,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         data['user'] = request.user.id
-        lon = request.data['lon']
-        lat = request.data['lat']
+        lon = request.data.get('lon', None)
+        lat = request.data.get('lat', None)
 
         if lon and lat:
             data['location'] = Point(float(lon), float(lat))
