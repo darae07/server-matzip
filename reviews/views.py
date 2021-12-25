@@ -31,10 +31,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return context
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return self.serializer_class['list']
         if self.action == 'retrieve':
             return self.serializer_class['retrieve']
+        return self.serializer_class['list']
 
     def get_queryset(self):
         queryset = Review.objects.all().order_by('-created_at')
@@ -80,6 +79,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    @permission_classes((IsAuthenticated,))
+    @action(detail=False, methods=['get'])
+    def favorite(self, request):
+        user = request.user
+        queryset = self.get_queryset()
+        queryset = queryset.filter(likes__user=user)
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
 
 class ReviewImageViewSet(viewsets.ModelViewSet):
