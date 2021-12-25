@@ -17,7 +17,7 @@ class CommonUser(AbstractUser):
     username = None
     email = models.EmailField(_('email address'), unique=True)
 
-    nickname = models.CharField(max_length=100, null=True, blank=True)
+    nickname = models.CharField(max_length=100, null=True, blank=True, unique=True)
     title = models.CharField(max_length=400, null=True, blank=True)
     image = models.ImageField(upload_to=unique_path, default='')
     status = models.CharField(max_length=100, null=True, blank=True)
