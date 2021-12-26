@@ -1,7 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import CommonUserViewSet, kakao_login, kakao_login_callback, LoginView
-from dj_rest_auth.views import LogoutView
+from .views import CommonUserViewSet, kakao_login, kakao_login_callback, LoginView, LogoutView
 from dj_rest_auth.registration.views import RegisterView
 
 router = routers.DefaultRouter()

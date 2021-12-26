@@ -22,6 +22,7 @@ from django.conf import settings
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.sites.models import Site
 from dj_rest_auth import views
+from dj_rest_auth.serializers import JWTSerializer
 
 
 current_site = Site.objects.get_current()
@@ -93,6 +94,14 @@ class LoginView(views.LoginView):
         return super(LoginView, self).get_response()
 
 
+class LogoutView(views.LogoutView):
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        if user.login_method == CommonUser.LOGIN_KAKAO:
+            return kakao_logout(request)
+        return super(LogoutView, self).logout(request)
+
+
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def kakao_login(request):
@@ -128,6 +137,7 @@ def kakao_login_callback(request):
         if error is not None:
             TokenException('access token을 가져올수 없습니다.')
         access_token = access_token_json.get('access_token')
+        refresh_token = access_token_json.get('refresh_token')
         headers = {'Authorization': f'Bearer {access_token}'}
         profile_request = requests.post('https://kapi.kakao.com/v2/user/me',
                                         headers=headers,
@@ -160,7 +170,13 @@ def kakao_login_callback(request):
             user.save()
         messages.success(request, f'{user.email} 카카오 로그인 성공')
         login(request, user, backend="django.contrib.auth.backends.ModelBackend",)
-        return Response({'message': '로그인 성공'})
+        data = {
+            'user': user,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+        }
+        serializer = JWTSerializer(data)
+        return Response({'message': '로그인 성공', **serializer.data}, status=status.HTTP_200_OK)
     except AlertException as e:
         print(e)
         messages.error(request, e)
@@ -170,6 +186,20 @@ def kakao_login_callback(request):
         print(e)
         # 개발 단계에서 확인
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def kakao_logout(request):
+    try:
+        logout_request = requests.post('https://kapi.kakao.com/v1/user/logout')
+        logout_request_json = logout_request.json()
+        error = logout_request_json.get('error', None)
+        if error is not None:
+            AlertException('로그아웃 실패')
+        return Response({'message': '로그아웃 성공'})
+    except AlertException as e:
+        messages.error(request, e)
+        # 유저에게 알림
+        return Response({'message': str(e)}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 class GoogleLogin(SocialLoginView):
