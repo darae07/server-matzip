@@ -41,8 +41,6 @@ class CommonUserViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, pk=None, *args, **kwargs):
         data = self.request.data
-        if self.request.FILES:
-            data.image = self.request.FILES
         instance = self.get_object()
         serializer = UserSerializer(instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -55,6 +53,16 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         user.image.delete(save=True)
         user.save()
         return Response(data={'id': pk}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def upload_profile_image(self, request, pk=None):
+        user = self.get_object()
+        if request.FILES:
+            user.image = request.FILES
+        serializer = UserSerializer(user, data=user, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**serializer.validated_data)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 def kakao_login(request):
