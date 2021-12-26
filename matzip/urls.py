@@ -29,6 +29,6 @@ urlpatterns = [
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     path('api/accounts/', include('allauth.urls')),
     # used to validate code & access tokens given by google and refresh google token
-    path('api/social-login/google/', google_token, name='google_login'),
+    # path('api/social-login/google/', google_token, name='google_login'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
