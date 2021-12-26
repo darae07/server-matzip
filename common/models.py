@@ -23,6 +23,19 @@ class CommonUser(AbstractUser):
     status = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=50, null=True, blank=True)
 
+    LOGIN_EMAIL = 'email'
+    LOGIN_KAKAO = 'kakao'
+    LOGIN_GOOGLE = 'google'
+    LOGIN_CHOICES = (
+        (LOGIN_EMAIL, 'email'),
+        (LOGIN_GOOGLE, 'google'),
+        (LOGIN_KAKAO, 'kakao')
+    )
+
+    login_method = models.CharField(
+        max_length=6, choices=LOGIN_CHOICES, default=LOGIN_EMAIL
+    )
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
