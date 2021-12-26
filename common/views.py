@@ -88,6 +88,10 @@ class KakaoException(Exception):
     pass
 
 
+class TokenException(Exception):
+    pass
+
+
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def kakao_login_callback(request):
@@ -96,7 +100,7 @@ def kakao_login_callback(request):
             raise KakaoException('이미 로그인한 유저입니다.')
         code = request.GET.get('code', None)
         if code is None:
-            KakaoException('코드를 불러올 수 없습니다.')
+            TokenException('코드를 불러올 수 없습니다.')
         request_access_token = requests.post(
             f'https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={KAKAO_CLIENT_ID}'
             f'&redirect_uri={KAKAO_REDIRECT_URI}&code={code}&client_secret={KAKAO_SECRET}',
@@ -105,7 +109,7 @@ def kakao_login_callback(request):
         access_token_json = request_access_token.json()
         error = access_token_json.get('error', None)
         if error is not None:
-            KakaoException('access token을 가져올수 없습니다.')
+            TokenException('access token을 가져올수 없습니다.')
         access_token = access_token_json.get('access_token')
         headers = {'Authorization': f'Bearer {access_token}'}
         profile_request = requests.post('https://kapi.kakao.com/v2/user/me',
@@ -116,8 +120,10 @@ def kakao_login_callback(request):
         profile = kakao_account.get('profile')
 
         nickname = profile.get('nickname', None)
-        avatar_url = profile.get('profile_image_url', None)
         email = kakao_account.get('email', None)
+
+        if email is None:
+            KakaoException('카카오계정(이메일) 제공 동의에 체크해 주세요.')
 
         try:
             user = CommonUser.objects.get(email=email)
@@ -132,9 +138,7 @@ def kakao_login_callback(request):
                 nickname=nickname,
                 login_method=CommonUser.LOGIN_KAKAO
             )
-            if avatar_url is not None:
-                avatar_request = requests.post(avatar_url)
-                user.image = ContentFile(avatar_request.content)
+
             user.set_unusable_password()
             user.save()
         messages.success(request, f'{user.email} 카카오 로그인 성공')
@@ -143,6 +147,11 @@ def kakao_login_callback(request):
     except KakaoException as e:
         print(e)
         messages.error(request, e)
+        # 유저에게 알림
+        return Response({'message': str(e)}, status=status.HTTP_406_NOT_ACCEPTABLE)
+    except TokenException as e:
+        print(e)
+        # 개발 단계에서 확인
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
