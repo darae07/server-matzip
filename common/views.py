@@ -50,19 +50,21 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['delete'])
+    @action(detail=False, methods=['delete'])
     def delete_profile_image(self, request, pk=None):
-        user = self.get_object()
+        user = self.request.user
         user.image.delete(save=True)
         user.save()
         return Response(data={'id': pk}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def upload_profile_image(self, request, pk=None):
-        user = self.get_object()
+        user = self.request.user
+        data = {}
         if request.FILES:
-            user.image = request.FILES
-        serializer = UserSerializer(user, data=user, partial=True)
+            print(request.FILES['image'])
+            data['image'] = request.FILES['image']
+        serializer = UserSerializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
