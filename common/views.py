@@ -21,6 +21,7 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.conf import settings
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.sites.models import Site
+from dj_rest_auth import views
 
 
 current_site = Site.objects.get_current()
@@ -62,12 +63,34 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         data = {}
         if request.FILES:
-            print(request.FILES['image'])
             data['image'] = request.FILES['image']
         serializer = UserSerializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+class AlertException(Exception):
+    pass
+
+
+class TokenException(Exception):
+    pass
+
+
+class LoginView(views.LoginView):
+    def post(self, request, *args, **kwargs):
+        try:
+            user = CommonUser.objects.get(email=request.data['email'])
+        except CommonUser.DoesNotExist:
+            user = None
+        if user is not None:
+            if user.login_method != CommonUser.LOGIN_EMAIL:
+                return Response({'message': f'{user.login_method}로 로그인 해주세요'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        views.LoginView.serializer = super(LoginView, self).get_serializer(data=request.data)
+        views.LoginView.serializer.is_valid(raise_exception=True)
+        super(LoginView, self).login()
+        return super(LoginView, self).get_response()
 
 
 @api_view(('GET',))
@@ -86,20 +109,12 @@ def kakao_login(request):
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class KakaoException(Exception):
-    pass
-
-
-class TokenException(Exception):
-    pass
-
-
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def kakao_login_callback(request):
     try:
         if request.user.is_authenticated:
-            raise KakaoException('이미 로그인한 유저입니다.')
+            raise AlertException('이미 로그인한 유저입니다.')
         code = request.GET.get('code', None)
         if code is None:
             TokenException('코드를 불러올 수 없습니다.')
@@ -125,7 +140,7 @@ def kakao_login_callback(request):
         email = kakao_account.get('email', None)
 
         if email is None:
-            KakaoException('카카오계정(이메일) 제공 동의에 체크해 주세요.')
+            AlertException('카카오계정(이메일) 제공 동의에 체크해 주세요.')
 
         try:
             user = CommonUser.objects.get(email=email)
@@ -133,7 +148,7 @@ def kakao_login_callback(request):
             user = None
         if user is not None:
             if user.login_method != CommonUser.LOGIN_KAKAO:
-                KakaoException(f'{user.login_method}로 로그인 해주세요')
+                AlertException(f'{user.login_method}로 로그인 해주세요')
         else:
             user = CommonUser(
                 email=email,
@@ -146,7 +161,7 @@ def kakao_login_callback(request):
         messages.success(request, f'{user.email} 카카오 로그인 성공')
         login(request, user, backend="django.contrib.auth.backends.ModelBackend",)
         return Response({'message': '로그인 성공'})
-    except KakaoException as e:
+    except AlertException as e:
         print(e)
         messages.error(request, e)
         # 유저에게 알림
