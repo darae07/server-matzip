@@ -102,6 +102,10 @@ class LogoutView(views.LogoutView):
         return super(LogoutView, self).logout(request)
 
 
+@api_view(('POST',))
+@renderer_classes((JSONRenderer, JWTSerializer))
+
+
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def kakao_login(request):
@@ -200,6 +204,29 @@ def kakao_logout(request):
         messages.error(request, e)
         # 유저에게 알림
         return Response({'message': str(e)}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+def kakao_token_refresh(request):
+    try:
+        token_refresh = requests.post('https://kauth.kakao.com//oauth/token', data={
+            'grant_type': 'refresh_token',
+            'client_id': KAKAO_CLIENT_ID,
+            'refresh_token': request.data['refresh_token'],
+            'client_secret': KAKAO_SECRET
+        })
+        access_token_json = token_refresh.json()
+        error = access_token_json.get('error', None)
+        if error is not None:
+            TokenException('access token을 가져올수 없습니다.')
+        access_token = access_token_json.get('access_token')
+        refresh_token = access_token_json.get('refresh_token')
+        data = {
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+        }
+        return Response({'message': '토큰 갱신 성공', **data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleLogin(SocialLoginView):
