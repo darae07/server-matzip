@@ -102,10 +102,6 @@ class LogoutView(views.LogoutView):
         return super(LogoutView, self).logout(request)
 
 
-@api_view(('POST',))
-@renderer_classes((JSONRenderer, JWTSerializer))
-
-
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def kakao_login(request):
@@ -192,11 +188,17 @@ def kakao_login_callback(request):
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(('POST',))
+@renderer_classes((JSONRenderer,))
 def kakao_logout(request):
     try:
-        logout_request = requests.post('https://kapi.kakao.com/v1/user/logout')
+        access_token = request.META.get('HTTP_KAKAOTOKEN')
+        headers = {'Authorization': f'Bearer {access_token}'}
+        logout_request = requests.post('https://kapi.kakao.com/v1/user/logout', headers=headers)
         logout_request_json = logout_request.json()
         error = logout_request_json.get('error', None)
+        code = logout_request_json.get('code')
+        print(error, code)
         if error is not None:
             AlertException('로그아웃 실패')
         return Response({'message': '로그아웃 성공'})
@@ -206,27 +208,28 @@ def kakao_logout(request):
         return Response({'message': str(e)}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
+@api_view(('POST',))
+@renderer_classes((JSONRenderer,))
 def kakao_token_refresh(request):
-    try:
-        token_refresh = requests.post('https://kauth.kakao.com//oauth/token', data={
+        token_refresh = requests.post('https://kauth.kakao.com/oauth/token', data={
             'grant_type': 'refresh_token',
             'client_id': KAKAO_CLIENT_ID,
-            'refresh_token': request.data['refresh_token'],
-            'client_secret': KAKAO_SECRET
-        })
+            'refresh_token': request.data['refresh_token']
+        }, headers={'Content-type': 'application/x-www-form-urlencoded;charset=utf-8'},)
         access_token_json = token_refresh.json()
         error = access_token_json.get('error', None)
+        print(error)
         if error is not None:
-            TokenException('access token을 가져올수 없습니다.')
+            return Response({'message': 'access token을 가져올수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
         access_token = access_token_json.get('access_token')
         refresh_token = access_token_json.get('refresh_token')
+
         data = {
             'access_token': access_token,
             'refresh_token': refresh_token,
         }
         return Response({'message': '토큰 갱신 성공', **data}, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleLogin(SocialLoginView):
