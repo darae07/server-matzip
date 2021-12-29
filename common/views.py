@@ -11,6 +11,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+
+from matzip.handler import request_data_handler
 from .models import CommonUser
 from .costume_serializers import FullUserSerializer
 from .serializers import UserSerializer
@@ -70,14 +72,14 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data={**serializer.data, 'message': '회원 정보를 변경했습니다.'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['delete'])
     def delete_profile_image(self, request, pk=None):
         user = self.request.user
         user.image.delete(save=True)
         user.save()
-        return Response(data={'id': pk}, status=status.HTTP_200_OK)
+        return Response(data={'id': pk, 'message': '회원 프로필 이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def upload_profile_image(self, request, pk=None):
@@ -88,7 +90,18 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data={**serializer.data, 'message': '회원 프로필 이지미를 등록했습니다.'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def find_email(self, request):
+        data = request_data_handler(request.data, ['nickname'])
+        nickname = data['nickname']
+        try:
+            user = CommonUser.objects.get(nickname=nickname)
+            serializer = UserSerializer(user)
+            return Response(data={**serializer.data, 'message': '회원 정보를 조회했습니다.'}, status=status.HTTP_200_OK)
+        except CommonUser.DoesNotExist:
+            return Response({'message': '회원 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 class AlertException(Exception):
