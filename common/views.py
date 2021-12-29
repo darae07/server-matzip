@@ -19,23 +19,21 @@ from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.conf import settings
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.contrib.sites.models import Site
 from dj_rest_auth import views
 from dj_rest_auth.serializers import JWTSerializer
 
-
 current_site = Site.objects.get_current()
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
-KAKAO_REDIRECT_URI = current_site.domain+'/api/common/kakao-callback/'
-KAKAO_SECRET=os.environ.get('KAKAO_SECRET')
+KAKAO_REDIRECT_URI = current_site.domain + '/api/common/kakao-callback/'
+KAKAO_SECRET = os.environ.get('KAKAO_SECRET')
 RESPONSE_TYPE = 'code'
 
 
 class CommonUserViewSet(viewsets.ModelViewSet):
     queryset = CommonUser.objects.all()
     serializer_class = FullUserSerializer
-    parser_classes = [MultiPartParser]
 
     def get_queryset(self):
         company = self.request.query_params.get('company')
@@ -46,8 +44,30 @@ class CommonUserViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, pk=None, *args, **kwargs):
         data = self.request.data
+        # if 'email' in data:
+        #     user = request.user
+        #     if user.email != data
         instance = self.get_object()
         serializer = UserSerializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**serializer.validated_data)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'])
+    def update_profile(self, request):
+        user = request.user
+        data = request.data
+        if 'email' in data:
+            if user.email == data['email']:
+                data.pop('email')
+            else:
+                try:
+                    same_email = CommonUser.objects.get(email=data['email'])
+                    if same_email:
+                        return Response({'message': '이미 사용중인 이메일 입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                except CommonUser.DoesNotExist:
+                    pass
+        serializer = UserSerializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -169,7 +189,7 @@ def kakao_login_callback(request):
             user.set_unusable_password()
             user.save()
         messages.success(request, f'{user.email} 카카오 로그인 성공')
-        login(request, user, backend="django.contrib.auth.backends.ModelBackend",)
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend", )
         data = {
             'user': user,
             'access_token': access_token,
@@ -211,25 +231,25 @@ def kakao_logout(request):
 @api_view(('POST',))
 @renderer_classes((JSONRenderer,))
 def kakao_token_refresh(request):
-        token_refresh = requests.post('https://kauth.kakao.com/oauth/token', data={
-            'grant_type': 'refresh_token',
-            'client_id': KAKAO_CLIENT_ID,
-            'refresh_token': request.data['refresh_token']
-        }, headers={'Content-type': 'application/x-www-form-urlencoded;charset=utf-8'},)
-        access_token_json = token_refresh.json()
-        error = access_token_json.get('error', None)
-        print(error)
-        if error is not None:
-            return Response({'message': 'access token을 가져올수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+    token_refresh = requests.post('https://kauth.kakao.com/oauth/token', data={
+        'grant_type': 'refresh_token',
+        'client_id': KAKAO_CLIENT_ID,
+        'refresh_token': request.data['refresh_token']
+    }, headers={'Content-type': 'application/x-www-form-urlencoded;charset=utf-8'}, )
+    access_token_json = token_refresh.json()
+    error = access_token_json.get('error', None)
+    print(error)
+    if error is not None:
+        return Response({'message': 'access token을 가져올수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        access_token = access_token_json.get('access_token')
-        refresh_token = access_token_json.get('refresh_token')
+    access_token = access_token_json.get('access_token')
+    refresh_token = access_token_json.get('refresh_token')
 
-        data = {
-            'access_token': access_token,
-            'refresh_token': refresh_token,
-        }
-        return Response({'message': '토큰 갱신 성공', **data}, status=status.HTTP_200_OK)
+    data = {
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+    }
+    return Response({'message': '토큰 갱신 성공', **data}, status=status.HTTP_200_OK)
 
 
 class GoogleLogin(SocialLoginView):
