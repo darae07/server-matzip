@@ -125,7 +125,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             reset_password_code = ResetPasswordCode.objects.create(**serializer.validated_data)
             code = reset_password_code.code
-            expired_at = reset_password_code.expired_at
+            expired_at = reset_password_code.expired_at.strftime('%Y-%m-%d %H:%M')
 
             try:
                 send_multipart_mail(email, '오늘뭐먹지 비밀번호 초기화 코드입니다.',
