@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from matzip.google import create_service
 from matzip.handler import request_data_handler
-from .models import CommonUser
+from .models import CommonUser, ResetPasswordCode
 from .costume_serializers import FullUserSerializer
 from .serializers import UserSerializer
 from group.models import Contract
@@ -31,6 +31,7 @@ import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from matzip.smtp import send_plain_mail, send_multipart_mail
+from .serializers import ResetPasswordCodeSerializer
 
 current_site = Site.objects.get_current()
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
@@ -119,17 +120,29 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         email = data['email']
 
         try:
-            send_multipart_mail(email, '오늘뭐먹지 비밀번호 초기화 코드입니다.', {'plain': '', 'html': f'<html>'
-                                                                                      f'<head></head>'
-                                                                                      f'<body>'
-                                                                                      f'<h1>오늘뭐먹지 비밀번호 초기화 코드입니다.</h1>'
-                                                                                      f'<p>코드: </p>'
-                                                                                      f'<p>유효기간은 까지입니다. </p>'
-                                                                                      f'</body>'
-                                                                                      f'</html>'})
-            return Response(data={'message': '메일을 전송했습니다.'}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            user = CommonUser.objects.get(email=email)
+            serializer = ResetPasswordCodeSerializer(data={'user': user.id})
+            serializer.is_valid(raise_exception=True)
+            reset_password_code = ResetPasswordCode.objects.create(**serializer.validated_data)
+            code = reset_password_code.code
+            expired_at = reset_password_code.expired_at
+
+            try:
+                send_multipart_mail(email, '오늘뭐먹지 비밀번호 초기화 코드입니다.',
+                                    {'plain': '',
+                                     'html': f'<html>'
+                                             f'<head></head>'
+                                             f'<body>'
+                                             f'<h1>오늘뭐먹지 비밀번호 초기화 코드입니다.</h1>'
+                                             f'<p>코드: {code}</p>'
+                                             f'<p>유효기간은 {expired_at}까지입니다. </p>'
+                                             f'</body>'
+                                             f'</html>'})
+                return Response(data={'message': '메일을 전송했습니다.'}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except CommonUser.DoesNotExist:
+            return Response({'message': '회원 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 class AlertException(Exception):

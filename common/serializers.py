@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from rest_framework.renderers import JSONRenderer
 import json
 from django.core.serializers import serialize
-from .models import CommonUser
+from .models import CommonUser, ResetPasswordCode
 
 
 class LoginSerializer(serializers.ModelSerializer):
@@ -25,3 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'date_joined', 'nickname', 'image', 'status', 'phone_number']
 
 
+class ResetPasswordCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResetPasswordCode
+        fields = '__all__'
