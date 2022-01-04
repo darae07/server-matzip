@@ -9,7 +9,7 @@ from django.shortcuts import redirect, reverse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, renderer_classes, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
@@ -32,6 +32,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from matzip.smtp import send_plain_mail, send_multipart_mail
 from .serializers import ResetPasswordCodeSerializer
+from datetime import datetime
 
 current_site = Site.objects.get_current()
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
@@ -51,7 +52,6 @@ class CommonUserViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @permission_classes((IsAuthenticated,))
     def partial_update(self, request, pk=None, *args, **kwargs):
         data = self.request.data
         # if 'email' in data:
@@ -63,8 +63,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    @permission_classes((IsAuthenticated,))
-    @action(detail=False, methods=['patch'])
+    @action(detail=False, methods=['patch'], permission_classes=[IsAuthenticated])
     def update_profile(self, request):
         user = request.user
         data = request.data
@@ -83,16 +82,14 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         return Response(data={**serializer.data, 'message': '회원 정보를 변경했습니다.'}, status=status.HTTP_200_OK)
 
-    @permission_classes((IsAuthenticated,))
-    @action(detail=False, methods=['delete'])
+    @action(detail=False, methods=['delete'], permission_classes=[IsAuthenticated])
     def delete_profile_image(self, request, pk=None):
         user = self.request.user
         user.image.delete(save=True)
         user.save()
         return Response(data={'id': pk, 'message': '회원 프로필 이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
 
-    @permission_classes((IsAuthenticated,))
-    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser], permission_classes=[IsAuthenticated])
     def upload_profile_image(self, request, pk=None):
         user = self.request.user
         data = {}
@@ -103,7 +100,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         return Response(data={**serializer.data, 'message': '회원 프로필 이지미를 등록했습니다.'}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def find_email(self, request):
         data = request_data_handler(request.data, ['nickname'])
         nickname = data['nickname']
@@ -114,7 +111,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         except CommonUser.DoesNotExist:
             return Response({'message': '회원 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def send_reset_password_code(self, request):
         data = request_data_handler(request.data, ['email'])
         email = data['email']
@@ -123,6 +120,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
             user = CommonUser.objects.get(email=email)
             serializer = ResetPasswordCodeSerializer(data={'user': user.id})
             serializer.is_valid(raise_exception=True)
+            past_password_codes = ResetPasswordCode.objects.filter(user=user).update(status=ResetPasswordCode.EXPIRED)
             reset_password_code = ResetPasswordCode.objects.create(**serializer.validated_data)
             code = reset_password_code.code
             expired_at = reset_password_code.expired_at.strftime('%Y-%m-%d %H:%M')
@@ -141,6 +139,54 @@ class CommonUserViewSet(viewsets.ModelViewSet):
                 return Response(data={'message': '메일을 전송했습니다.'}, status=status.HTTP_200_OK)
             except Exception as e:
                 return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except CommonUser.DoesNotExist:
+            return Response({'message': '회원 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def confirm_password_reset_code(self, request):
+        data = request_data_handler(request.data, ['email', 'code'])
+        code = data['code']
+        email = data['email']
+
+        try:
+            user = CommonUser.objects.get(email=email)
+            try:
+                reset_password_code = ResetPasswordCode.objects.get(user=user, code=code)
+                if reset_password_code.status == ResetPasswordCode.USED:
+                    return Response({'message': '사용된 인증코드입니다. 다시 발급해 주세요.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                if reset_password_code.status == ResetPasswordCode.EXPIRED:
+                    return Response({'message': '만료된 인증코드입니다. 유효한 코드를 이용하거나 다시 발급해 주세요.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                if reset_password_code.expired_at < datetime.now():
+                    return Response({'message': '유효시간이 경과되었습니다. 다시 발급해 주세요.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+                if reset_password_code.status == ResetPasswordCode.ACTIVE:
+                    reset_password_code.status = ResetPasswordCode.USED
+                    reset_password_code.save()
+                    return Response({'message': '인증코드 확인이 완료되었습니다.', 'user': user.id})
+
+            except ResetPasswordCode.DoesNotExist:
+                return Response({'message': '인증코드를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        except CommonUser.DoesNotExist:
+            return Response({'message': '회원 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def reset_password_by_code(self, request):
+        data = request_data_handler(request.data, ['user', 'code', 'password'])
+        user_id = data['user']
+        code = data['code']
+        password = data['password']
+
+        try:
+            user = CommonUser.objects.get(id=user_id)
+            try:
+                reset_code = ResetPasswordCode.objects.get(user=user_id, code=code, status=ResetPasswordCode.USED)
+                user.set_password(password)
+                user.save()
+                reset_code.status = ResetPasswordCode.EXPIRED
+                reset_code.save()
+                return Response({'message': '비밀번호 변경이 완료되었습니다.', 'user': user.id})
+            except ResetPasswordCode.DoesNotExist:
+                return Response({'message': '확인된 인증코드를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         except CommonUser.DoesNotExist:
             return Response({'message': '회원 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
