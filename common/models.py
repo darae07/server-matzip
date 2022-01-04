@@ -4,6 +4,8 @@ import uuid
 from django.contrib.auth.models import User, AbstractUser
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+
+from matzip.utils.datetime import get_after_minutes
 from .managers import CustomUserManager
 
 
@@ -43,3 +45,20 @@ class CommonUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+def _create_id():
+    return uuid.uuid4().hex[:6].upper()
+
+
+def _expired_at():
+    EXPIRED_TIME = 30
+    return get_after_minutes(EXPIRED_TIME)
+
+
+class ResetPasswordCode(models.Model):
+    code = models.CharField(max_length=8, editable=False, default=_create_id, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expired_at = models.DateTimeField(default=_expired_at)
+    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
+    used = models.BooleanField(default=False)
