@@ -8,7 +8,8 @@ from django.db.models import Prefetch
 from django.shortcuts import redirect, reverse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view, renderer_classes
+from rest_framework.decorators import action, api_view, renderer_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
@@ -49,6 +50,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @permission_classes((IsAuthenticated,))
     def partial_update(self, request, pk=None, *args, **kwargs):
         data = self.request.data
         # if 'email' in data:
@@ -60,6 +62,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+    @permission_classes((IsAuthenticated,))
     @action(detail=False, methods=['patch'])
     def update_profile(self, request):
         user = request.user
@@ -79,6 +82,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         return Response(data={**serializer.data, 'message': '회원 정보를 변경했습니다.'}, status=status.HTTP_200_OK)
 
+    @permission_classes((IsAuthenticated,))
     @action(detail=False, methods=['delete'])
     def delete_profile_image(self, request, pk=None):
         user = self.request.user
@@ -86,6 +90,7 @@ class CommonUserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response(data={'id': pk, 'message': '회원 프로필 이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
 
+    @permission_classes((IsAuthenticated,))
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def upload_profile_image(self, request, pk=None):
         user = self.request.user
@@ -115,14 +120,14 @@ class CommonUserViewSet(viewsets.ModelViewSet):
 
         try:
             send_multipart_mail(email, '오늘뭐먹지 비밀번호 초기화 코드입니다.', {'plain': '', 'html': f'<html>'
-                                                                                  f'<head></head>'
-                                                                                  f'<body>'
-                                                                                  f'<h1>오늘뭐먹지 비밀번호 초기화 코드입니다.</h1>'
-                                                                                  f'<p>코드: </p>'
-                                                                                  f'<p>유효기간은 까지입니다. </p>'
-                                                                                  f'</body>'
-                                                                                  f'</html>'})
-            return Response(data={ 'message': '메일을 전송했습니다.'}, status=status.HTTP_200_OK)
+                                                                                      f'<head></head>'
+                                                                                      f'<body>'
+                                                                                      f'<h1>오늘뭐먹지 비밀번호 초기화 코드입니다.</h1>'
+                                                                                      f'<p>코드: </p>'
+                                                                                      f'<p>유효기간은 까지입니다. </p>'
+                                                                                      f'</body>'
+                                                                                      f'</html>'})
+            return Response(data={'message': '메일을 전송했습니다.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
