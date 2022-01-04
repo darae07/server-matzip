@@ -57,8 +57,16 @@ def _expired_at():
 
 
 class ResetPasswordCode(models.Model):
+    EXPIRED = 'expired'
+    USED = 'used'
+    ACTIVE = 'active'
+    RESET_CHOICES = (
+        (EXPIRED, 'expired'),
+        (USED, 'used'),
+        (ACTIVE, 'active')
+    )
     code = models.CharField(max_length=8, editable=False, default=_create_id, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expired_at = models.DateTimeField(default=_expired_at)
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
-    used = models.BooleanField(default=False)
+    status = models.CharField(max_length=7, choices=RESET_CHOICES, default=ACTIVE)
