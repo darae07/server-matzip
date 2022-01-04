@@ -12,6 +12,7 @@ from rest_framework.decorators import action, api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from matzip.google import create_service
 from matzip.handler import request_data_handler
 from .models import CommonUser
 from .costume_serializers import FullUserSerializer
@@ -25,6 +26,10 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.contrib.sites.models import Site
 from dj_rest_auth import views
 from dj_rest_auth.serializers import JWTSerializer
+import base64
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from matzip.smtp import send_plain_mail, send_multipart_mail
 
 current_site = Site.objects.get_current()
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
@@ -102,6 +107,24 @@ class CommonUserViewSet(viewsets.ModelViewSet):
             return Response(data={**serializer.data, 'message': '회원 정보를 조회했습니다.'}, status=status.HTTP_200_OK)
         except CommonUser.DoesNotExist:
             return Response({'message': '회원 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=False, methods=['post'])
+    def send_reset_password_code(self, request):
+        data = request_data_handler(request.data, ['email'])
+        email = data['email']
+
+        try:
+            send_multipart_mail(email, '오늘뭐먹지 비밀번호 초기화 코드입니다.', {'plain': '', 'html': f'<html>'
+                                                                                  f'<head></head>'
+                                                                                  f'<body>'
+                                                                                  f'<h1>오늘뭐먹지 비밀번호 초기화 코드입니다.</h1>'
+                                                                                  f'<p>코드: </p>'
+                                                                                  f'<p>유효기간은 까지입니다. </p>'
+                                                                                  f'</body>'
+                                                                                  f'</html>'})
+            return Response(data={ 'message': '메일을 전송했습니다.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AlertException(Exception):
