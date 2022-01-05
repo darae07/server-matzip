@@ -48,7 +48,7 @@ class CompanyMemberSerializer(serializers.ModelSerializer):
 
 
 class VoteListSerializer(serializers.ModelSerializer):
-    store = StoreSerializer(read_only=True, many=False)
+    team_member = TeamMemberSerializer(read_only=True, many=False)
 
     class Meta:
         model = Vote
@@ -81,6 +81,7 @@ class MembershipCreateSerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     team_member = TeamMemberSerializer(read_only=True, many=False)
+    votes = VoteListSerializer(read_only=True, many=True)
 
     class Meta:
         model = Tag

@@ -13,7 +13,7 @@ from django.db.models import Prefetch
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Party, Membership, Vote, Tag, TeamMember
+from .models import Party, Membership, Vote, Tag, TeamMember, Team
 from common.models import CommonUser
 from rest_framework import viewsets, status
 from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \
@@ -132,6 +132,34 @@ class VoteViewSet(viewsets.ModelViewSet):
         vote = get_object_or_404(self.queryset, pk=pk)
         serializer = VoteListSerializer(vote)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        data = request_data_handler(request.data, ['party', 'tag'])
+        party = data['party']
+        tag = data['tag']
+
+        try:
+            party_instance = Party.objects.get(id=party)
+        except Party.DoesNotExist:
+            return Response({'message': '파티를 찾을수 없습니다'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        try:
+            team_instance = Team.objects.get(id=party_instance.team.id)
+        except Team.DoesNotExist:
+            return Response({'message': '팀을 찾을수 없습니다'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        try:
+            team_member_instance = TeamMember.objects.get(team=team_instance.id, user=user.id)
+        except TeamMember.DoesNotExist:
+            return Response({'message': '멤버를 찾을수 없습니다'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        data['team_member'] = team_member_instance.id
+
+        if Vote.objects.filter(party=party, tag=tag, team_member=team_member_instance.id):
+            return Response({'message': '동일한 투표가 이미 존재합니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        serializer = VoteSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data={**serializer.data, 'message': '투표가 생성되었습니다.'}, status=status.HTTP_201_CREATED)
 
 
 class TagViewSet(viewsets.ModelViewSet):
