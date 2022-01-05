@@ -184,7 +184,11 @@ class TagViewSet(viewsets.ModelViewSet):
         user = request.user
         data = request_data_handler(request.data, ['party', 'review'])
         party = Party.objects.get(pk=data['party'])
-        team_member = TeamMember.objects.get(user=user, team=party.team)
+        try:
+            team_member = TeamMember.objects.get(user=user, team=party.team)
+        except TeamMember.DoesNotExist:
+            return Response({'message': '멤버를 찾을수 없습니다'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         data['team_member'] = team_member.pk
 
         same_tag = Tag.objects.filter(team_member=data['team_member'], party=data['party'], review=data['review'])
