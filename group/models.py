@@ -91,15 +91,6 @@ class Membership(models.Model):
         return self.team_member.member_name
 
 
-class Vote(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE, null=True, blank=True, related_name='store')
-    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, null=True, blank=True, related_name='menu')
-    membership = models.OneToOneField(Membership, null=True, blank=True, related_name='vote', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.store.name
-
-
 class Invite(models.Model):
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
     sender = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
@@ -117,3 +108,12 @@ class Tag(models.Model):
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='tags')
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey('reviews.Review', on_delete=models.CASCADE, null=True, blank=True)
+
+
+class Vote(models.Model):
+    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
+    party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True)
+    tag = models.ForeignKey('group.Tag', on_delete=models.CASCADE, null=True, blank=True, related_name='votes')
+
+    def __str__(self):
+        return self.team_member.member_name
