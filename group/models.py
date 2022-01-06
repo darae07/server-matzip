@@ -30,6 +30,7 @@ class Team(models.Model):
     image = models.ImageField(upload_to=unique_path, default='')
     title = models.CharField(max_length=300, blank=True, null=True)
     join_code = models.CharField(max_length=8, editable=False, default=_create_id, unique=True)
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
 
 
 class TeamMember(models.Model):
@@ -70,10 +71,10 @@ class Contract(models.Model):
 class Party(models.Model):
     name = models.CharField(max_length=100)
     team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
-    # members = models.ManyToManyField('common.CommonUser', through='Membership')
-    # company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name='company')
     description = models.CharField(max_length=500, null=True, blank=True)
     date = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    closed_at = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -108,12 +109,14 @@ class Tag(models.Model):
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='tags')
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey('reviews.Review', on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
 
 
 class Vote(models.Model):
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True)
     tag = models.ForeignKey('group.Tag', on_delete=models.CASCADE, null=True, blank=True, related_name='votes')
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
 
     def __str__(self):
         return self.team_member.member_name
