@@ -9,7 +9,9 @@
 # vote
 # r - 파티별 투표 조회
 # c -
-from django.db.models import Prefetch
+from django.db.models import Prefetch, F
+from django.utils.dateparse import parse_datetime
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,6 +21,7 @@ from rest_framework import viewsets, status
 from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \
     MembershipCreateSerializer, VoteListSerializer, TagCreateSerializer, TagSerializer, PartyDetailSerializer
 from matzip.handler import request_data_handler
+import datetime
 
 
 class PartyViewSet(viewsets.ModelViewSet):
@@ -31,14 +34,7 @@ class PartyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = self.queryset
-        # company = self.request.query_params.get('company')
-        #
-        # user = CommonUser.objects.prefetch_related(Prefetch('contract',
-        #                                                     queryset=Contract.objects.filter(company=company)))
-        # membership = Membership.objects.prefetch_related(Prefetch('user', queryset=user,
-        #                                                           to_attr='prefetched_contracts'))
-        # return queryset.prefetch_related(Prefetch('membership', queryset=membership, to_attr='prefetched_membership'))
+        queryset = self.queryset.order_by(F('closed_at').desc(nulls_first=True), '-created_at')
         return queryset
 
     def get_serializer_context(self):
@@ -66,6 +62,43 @@ class PartyViewSet(viewsets.ModelViewSet):
         party = get_object_or_404(self.queryset, pk=pk)
         serializer = self.get_serializer(party)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        data = request_data_handler(request.data, ['name', 'team'], ['description', 'date'])
+        if Party.objects.filter(team=data['team'], name=data['name']):
+            return Response({'message': '이미 같은 파티가 있습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        if data['date']:
+            data['date'] = parse_datetime(data['date'])
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        data = request.data
+        try:
+            party = Party.objects.get(pk=pk)
+            if 'date' in data:
+                data['date'] = parse_datetime(data['date'])
+            serializer = self.get_serializer(instance=party, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(data={**serializer.data, 'message': '파티가 업데이트 되었습니다.'}, status=status.HTTP_200_OK)
+        except Party.DoesNotExist:
+            return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=True, methods=['POST'])
+    def close(self, request, pk=None):
+        try:
+            party = Party.objects.get(pk=pk)
+            now = datetime.datetime.now()
+            party.closed_at = now
+            party.save()
+            serializer = PartySerializer(party)
+            return Response(data={**serializer.data, 'message': '파티가 종료되었습니다.'}, status=status.HTTP_200_OK)
+        except Party.DoesNotExist:
+            return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 class MembershipViewSet(viewsets.ModelViewSet):

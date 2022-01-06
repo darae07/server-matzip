@@ -118,26 +118,11 @@ class PartyDetailSerializer(serializers.ModelSerializer):
 
 
 class PartySerializer(serializers.ModelSerializer):
-    # members = MembershipSerializer(read_only=True, many=True)
 
     class Meta:
         model = Party
         fields = '__all__'
         list_serializer_class = PartyListSerializer
-
-    def create(self, validated_data):
-        s = self.data['date']
-        date = parse_datetime(s)
-        data = validated_data
-        data['date'] = date
-        return Party.objects.create(**data)
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.description = validated_data.get('description', instance.description)
-        instance.date = parse_datetime(self.data['date'])
-        instance.save()
-        return instance
 
 
 class TeamSerializer(serializers.ModelSerializer):
