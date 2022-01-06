@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Review, ReviewImage, Comment, Like
 from common.costume_serializers import FullUserSerializer
-from group.serializer import TeamMemberSerializer, TeamMemberCreateSerializer
+from group.serializer_team_member import TeamMemberCreateSerializer
 from group.models import TeamMember
 from .constants import LikeStatus
 
@@ -93,10 +93,13 @@ class ReviewListSerializer(ReviewSerializer):
         fields = '__all__'
 
     def get_team_member(self, instance):
-        if self.context['request']:
+        team = None
+        if 'request' in self.context:
             team = self.context['request'].query_params.get('team')
-            if team:
-                return get_team_member(team, instance)
+        if 'team' in self.context:
+            team = self.context['team']
+        if team:
+            return get_team_member(team, instance)
         return None
 
     def get_likes(self, instance):

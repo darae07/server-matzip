@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from common.models import CommonUser
 from .models import TeamMember, Team
 from rest_framework import viewsets, status, permissions
-from .serializer import TeamMemberSerializer, TeamSerializer, TeamMemberCreateSerializer
+from .serializer import TeamSerializer
+from .serializer_team_member import TeamMemberSerializer,TeamMemberCreateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
 

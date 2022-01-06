@@ -1,27 +1,12 @@
 from django.utils.dateparse import parse_datetime
+
+from reviews.serializer import ReviewListSerializer
 from .models import Company, Contract, Team, TeamMember
 from rest_framework import serializers
-from common.serializers import UserSerializer
 from .models import Vote, Party, Membership, Invite, Tag
 from stores.serializer import StoreSerializer
 from common.costume_serializers import FullUserSerializer
-
-
-class TeamMemberSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True, many=False)
-
-    class Meta:
-        model = TeamMember
-        read_only_fields = ['user']
-        fields = '__all__'
-
-
-class TeamMemberCreateSerializer(serializers.ModelSerializer):
-    # user = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
-
-    class Meta:
-        model = TeamMember
-        fields = '__all__'
+from .serializer_team_member import TeamMemberSerializer
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -88,6 +73,21 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TagDetailSerializer(serializers.ModelSerializer):
+    team_member = TeamMemberSerializer(read_only=True, many=False)
+    votes = VoteListSerializer(read_only=True, many=True)
+    review = serializers.SerializerMethodField('get_review')
+
+    def get_review(self, instance):
+        serializer = ReviewListSerializer(instance=instance.review, read_only=True, many=False,
+                                          context={'team': self.context['team']})
+        return serializer.data
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
 class TagCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -97,7 +97,20 @@ class TagCreateSerializer(serializers.ModelSerializer):
 class PartyListSerializer(serializers.ModelSerializer):
     membership = MembershipSerializer(read_only=True, many=True)
     tags = TagSerializer(read_only=True, many=True)
-    # votes = VoteSerializer(read_only=True, many=False)
+
+    class Meta:
+        model = Party
+        fields = '__all__'
+
+
+class PartyDetailSerializer(serializers.ModelSerializer):
+    membership = MembershipSerializer(read_only=True, many=True)
+    tags = serializers.SerializerMethodField('get_tags')
+
+    def get_tags(self, instance):
+        serializer = TagDetailSerializer(instance=instance.tags, read_only=True, many=True,
+                                         context={'team': instance.team.id})
+        return serializer.data
 
     class Meta:
         model = Party

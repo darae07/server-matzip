@@ -17,13 +17,17 @@ from .models import Party, Membership, Vote, Tag, TeamMember, Team
 from common.models import CommonUser
 from rest_framework import viewsets, status
 from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \
-    MembershipCreateSerializer, VoteListSerializer, TagCreateSerializer, TagSerializer
+    MembershipCreateSerializer, VoteListSerializer, TagCreateSerializer, TagSerializer, PartyDetailSerializer
 from matzip.handler import request_data_handler
 
 
 class PartyViewSet(viewsets.ModelViewSet):
     queryset = Party.objects.all()
-    serializer_class = PartySerializer
+    serializer_class = {
+        'create': PartySerializer,
+        'list': PartyListSerializer,
+        'retrieve': PartyDetailSerializer
+    }
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -37,18 +41,30 @@ class PartyViewSet(viewsets.ModelViewSet):
         # return queryset.prefetch_related(Prefetch('membership', queryset=membership, to_attr='prefetched_membership'))
         return queryset
 
+    def get_serializer_context(self):
+        context = super(PartyViewSet, self).get_serializer_context()
+        context.update({'request': self.request})
+        return context
+
+    def get_serializer_class(self):
+        if self.action == 'create' or self.action == 'partial_update':
+            return self.serializer_class['create']
+        if self.action == 'retrieve':
+            return self.serializer_class['retrieve']
+        return self.serializer_class['list']
+
     def list(self, request, *args, **kwargs):
         queryset = self.queryset.order_by('id')
         team = self.request.query_params.get('team')
         if team:
             queryset = queryset.filter(team=team)
         page = self.paginate_queryset(queryset)
-        serializer = PartyListSerializer(page, many=True)
+        serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         party = get_object_or_404(self.queryset, pk=pk)
-        serializer = PartyListSerializer(party)
+        serializer = self.get_serializer(party)
         return Response(serializer.data)
 
 
