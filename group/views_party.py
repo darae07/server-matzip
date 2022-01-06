@@ -100,6 +100,14 @@ class PartyViewSet(viewsets.ModelViewSet):
         except Party.DoesNotExist:
             return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+    def destroy(self, request, pk=None, *args, **kwargs):
+        try:
+            party = Party.objects.get(pk=pk)
+            party.delete()
+            return Response(data={'message': '파티를 삭제했습니다.'}, status=status.HTTP_200_OK)
+        except Party.DoesNotExist:
+            return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
 
 class MembershipViewSet(viewsets.ModelViewSet):
     queryset = Membership.objects.all()
