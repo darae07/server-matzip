@@ -30,7 +30,7 @@ class Team(models.Model):
     image = models.ImageField(upload_to=unique_path, default='')
     title = models.CharField(max_length=300, blank=True, null=True)
     join_code = models.CharField(max_length=8, editable=False, default=_create_id, unique=True)
-    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
 
 class TeamMember(models.Model):
@@ -38,7 +38,7 @@ class TeamMember(models.Model):
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
                              related_name='team_membership')
     member_name = models.CharField(max_length=100, blank=True, null=True)
-    date_joined = models.DateField(auto_now_add=True, blank=True)
+    date_joined = models.DateTimeField(auto_now_add=True, blank=True)
     image = models.ImageField(upload_to=unique_path2, default='')
     title = models.CharField(max_length=6, blank=True, null=True)
 
@@ -60,7 +60,7 @@ class Contract(models.Model):
                              related_name='contract')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True,
                                 related_name='members')
-    date_joined = models.DateField(auto_now_add=True, blank=True)
+    date_joined = models.DateTimeField(auto_now_add=True, blank=True)
     team_name = models.CharField(max_length=100, null=True, blank=True)
     my_name = models.CharField(max_length=50, null=True, blank=True)
 
@@ -73,8 +73,8 @@ class Party(models.Model):
     team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
     description = models.CharField(max_length=500, null=True, blank=True)
     date = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
-    closed_at = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -84,7 +84,7 @@ class Membership(models.Model):
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='membership')
-    date_joined = models.DateField(auto_now_add=True, blank=True)
+    date_joined = models.DateTimeField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
     status = models.SmallIntegerField(default=MembershipStatus.ALLOWED.value)
 
@@ -98,7 +98,7 @@ class Invite(models.Model):
                                related_name='sender')
     receiver = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
                                     related_name='receiver')
-    date_invited = models.DateField(auto_now_add=True, blank=True)
+    date_invited = models.DateTimeField(auto_now_add=True, blank=True)
     status = models.SmallIntegerField(default=InviteStatus.WAITING.value)
 
     def __str__(self):
@@ -109,14 +109,14 @@ class Tag(models.Model):
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='tags')
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey('reviews.Review', on_delete=models.CASCADE, null=True, blank=True)
-    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
 
 class Vote(models.Model):
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True)
     tag = models.ForeignKey('group.Tag', on_delete=models.CASCADE, null=True, blank=True, related_name='votes')
-    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     def __str__(self):
         return self.team_member.member_name
