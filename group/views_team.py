@@ -79,29 +79,27 @@ class TeamViewSet(viewsets.ModelViewSet):
         except Team.DoesNotExist:
             raise Http404
 
+    @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
+    def upload_image(self, request, pk=None):
+        if request.FILES:
+            request.data.image = request.FILES
+        try:
+            team = Team.objects.get(pk=pk)
+        except Team.DoesNotExist:
+            return Response({'message': '팀 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        serializer = TeamSerializer(team, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**serializer.validated_data)
+        serializer = TeamSerializer(instance=serializer.instance)
+        return Response(data={**serializer.data, 'message': '이미지를 등록했습니다.'}, status=status.HTTP_200_OK)
 
-@api_view(['post'])
-@permission_classes((permissions.AllowAny,))
-@parser_classes([MultiPartParser, FormParser])
-def upload_team_image(request):
-    if request.data['team']:
-        request.data.team = request.data['team']
-    if request.FILES:
-        request.data.image = request.FILES
-    team = Team.objects.get(pk=request.data.team)
-    serializer = TeamSerializer(team, data=request.data, partial=True)
-    serializer.is_valid(raise_exception=True)
-    serializer.save(**serializer.validated_data)
-    return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-
-@api_view(['post'])
-@permission_classes((permissions.AllowAny,))
-def delete_team_image(request, pk):
-    team = Team.objects.get(pk=pk)
-    team.image.delete()
-    team.save()
-    return Response(data={'id': team.id}, status=status.HTTP_200_OK)
+    @action(detail=True, methods=['POST'])
+    def delete_image(self, request, pk=None):
+        team = Team.objects.get(pk=pk)
+        team.image.delete()
+        team.save()
+        serializer = TeamSerializer(instance=team)
+        return Response(data={**serializer.data, 'message': '이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
 
 
 class TeamMemberViewSet(viewsets.ModelViewSet):
@@ -169,28 +167,4 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
         team_member.save()
         serializer = TeamMemberSerializer(instance=team_member)
         return Response(data={**serializer.data, 'message': '이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
-
-
-@api_view(['post'])
-@permission_classes((permissions.AllowAny,))
-@parser_classes([MultiPartParser, FormParser])
-def upload_team_member_image(request):
-    if request.data['team_member']:
-        request.data.team_member = request.data['team_member']
-    if request.FILES:
-        request.data.image = request.FILES
-    team_member = TeamMember.objects.get(pk=request.data.team_member)
-    serializer = TeamMemberSerializer(team_member, data=request.data, partial=True)
-    serializer.is_valid(raise_exception=True)
-    serializer.save(**serializer.validated_data)
-    return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-
-@api_view(['post'])
-@permission_classes((permissions.AllowAny,))
-def delete_team_member_image(request, pk):
-    team_member = TeamMember.objects.get(pk=pk)
-    team_member.image.delete()
-    team_member.save()
-    return Response(data={'id': team_member.id}, status=status.HTTP_200_OK)
 
