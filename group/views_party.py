@@ -51,15 +51,23 @@ class PartyViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.queryset.order_by('id')
+        user = request.user
         team = self.request.query_params.get('team')
-        if team:
-            queryset = queryset.filter(team=team)
+        if not team:
+            return Response({'message': '팀을 선택해 주세요.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        team_member = TeamMember.objects.filter(team=team, user=user.id)
+        if not team_member:
+            return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        queryset = queryset.filter(team=team)
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         party = get_object_or_404(self.queryset, pk=pk)
+        team_member = TeamMember.objects.filter(user=request.user.id, team=party.team)
+        if not team_member:
+            return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         serializer = self.get_serializer(party)
         return Response(serializer.data)
 
