@@ -4,7 +4,8 @@
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Invite
+from matzip.handler import request_data_handler
+from .models import Invite, TeamMember, Party
 from rest_framework import viewsets, status
 from .serializer import InviteSerializer, InviteCreateSerializer, MembershipCreateSerializer
 from django.db.models import Q
@@ -24,20 +25,31 @@ class InviteViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        data = request.data
+        data = request_data_handler(request.data, ['receiver', 'party'])
 
         same_invite = Invite.objects.filter(Q(receiver=data['receiver']) & Q(party=data['party']))
         if same_invite:
             return Response({'message': '이미 초대된 회원입니다.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        data['party_id'] = data['party']
+        try:
+            party = Party.objects.get(id=data['party'])
+        except Party.DoesNotExist:
+            return Response({'message': '파티를 찾을 수 없습니다.'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+        try:
+            sender = TeamMember.objects.get(team=party.team.id, user=request.user.id)
+        except TeamMember.DoesNotExist:
+            return Response({'message': '팀 멤버가 아닙니다.'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        data['party_id'] = party.id
+        data['sender'] = sender.id
         serializer = InviteCreateSerializer(data=data)
         if serializer.is_valid():
             invite = Invite.objects.create(**serializer.validated_data)
             invite.save()
-            print(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({**serializer.data, 'message': '초대했습니다.'}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
@@ -47,7 +59,7 @@ class InviteViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if instance.status == InviteStatus.ACCEPTED.value:
             return Response({'message': '이미 승인된 초대입니다.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         membership = MembershipCreateSerializer(data={'team_member': instance.receiver.id, 'party': instance.party.id})
         if membership.is_valid():
             membership.save()
@@ -64,4 +76,14 @@ class InviteViewSet(viewsets.ModelViewSet):
             serializer.save(**serializer.validated_data)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk, *args, **kwargs):
+        try:
+            invite = Invite.objects.get(pk=pk)
+        except Invite.DoesNotExist:
+            return Response({'message': '초대를 찾을수 없습니다.'},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+        invite.delete()
+        return Response({'message': '초대를 거절했습니다.'},
+                        status=status.HTTP_200_OK)
 
