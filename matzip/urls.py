@@ -20,9 +20,9 @@ from django.conf.urls.static import static
 from common.views import GoogleLogin, google_token
 
 urlpatterns = [
-    path('api/stores/', include('stores.urls')),
-    path('api/reviews/', include('reviews.urls')),
-    path('api/groups/', include('group.urls')),
+    path('api/store/', include('stores.urls')),
+    path('api/review/', include('reviews.urls')),
+    path('api/group/', include('group.urls')),
     path('api/common/', include('common.urls')),
     path('admin/', admin.site.urls),
     path('api/auth/', include('dj_rest_auth.urls')),
