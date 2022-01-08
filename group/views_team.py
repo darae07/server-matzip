@@ -1,4 +1,4 @@
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Prefetch
 from django.http import Http404
 from rest_framework.decorators import action, api_view, parser_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +8,7 @@ from matzip.handler import request_data_handler
 from .constants import InviteStatus
 from .models import TeamMember, Team, Invite, Membership
 from rest_framework import viewsets, status, permissions
-from .serializer import TeamSerializer
+from .serializer import TeamSerializer, TeamFindSerializer, TeamListSerializer
 from .serializer_team_member import TeamMemberSerializer, TeamMemberCreateSerializer, PartyTeamMemberSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -23,6 +23,15 @@ class TeamViewSet(viewsets.ModelViewSet):
         membership = TeamMember.objects.filter(user=user.id).values('team')
         queryset = self.queryset.filter(id__in=membership)
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        user = request.user
+        teams = queryset.prefetch_related(
+            Prefetch('members', queryset=TeamMember.objects.filter(user=user.id)))\
+            .order_by('-created_at')
+        serializer = TeamListSerializer(teams, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         data = request_data_handler(request.data, ['name'])
@@ -74,7 +83,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         code = request.data['code']
         try:
             team = Team.objects.get(join_code=code)
-            serializer = self.serializer_class(team, many=False)
+            serializer = TeamFindSerializer(team, many=False)
             return Response(data={**serializer.data, 'message': '인증코드로 팀을 찾았습니다.'})
         except Team.DoesNotExist:
             raise Http404
