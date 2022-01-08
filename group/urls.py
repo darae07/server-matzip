@@ -3,9 +3,7 @@ from django.conf.urls import include
 from rest_framework import routers
 from .views_invite import InviteViewSet
 from .views_party import PartyViewSet, MembershipViewSet, VoteViewSet, TagViewSet
-from .views_team import TeamMemberViewSet, TeamViewSet, upload_team_image, delete_team_image, \
-    upload_team_member_image, delete_team_member_image
-
+from .views_team import TeamMemberViewSet, TeamViewSet
 router = routers.DefaultRouter()
 router.register(r'party', PartyViewSet)
 router.register(r'vote', VoteViewSet)
@@ -16,9 +14,5 @@ router.register(r'member', TeamMemberViewSet)
 router.register(r'tag', TagViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('upload-team-image/', upload_team_image),
-    path('delete-team-image/<int:pk>/', delete_team_image),
-    path('upload-team-member-image/', upload_team_member_image),
-    path('delete-team-member-image/<int:pk>/', delete_team_member_image)
+    path('', include(router.urls))
 ]
