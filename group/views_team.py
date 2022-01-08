@@ -1,18 +1,21 @@
+from django.db.models import Exists, OuterRef
 from django.http import Http404
 from rest_framework.decorators import action, api_view, parser_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from common.models import CommonUser
-from .models import TeamMember, Team
+from .constants import InviteStatus
+from .models import TeamMember, Team, Invite, Membership
 from rest_framework import viewsets, status, permissions
 from .serializer import TeamSerializer
-from .serializer_team_member import TeamMemberSerializer,TeamMemberCreateSerializer
+from .serializer_team_member import TeamMemberSerializer, TeamMemberCreateSerializer, PartyTeamMemberSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -33,13 +36,20 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     @action(detail=True)
     def members(self, request, pk=None):
-        members = TeamMember.objects.filter(team=pk)
+        members = TeamMember.objects.filter(team=pk).order_by('member_name')
+
+        party = self.request.query_params.get('party')
+        if party:
+            members = members.annotate(
+                is_invited_waiting=Exists(Invite.objects.filter(receiver=OuterRef('id'), party=party, status=InviteStatus.WAITING.value)),
+                is_party_member=Exists(Membership.objects.filter(party=party, team_member=OuterRef('id')))
+            ).order_by('-is_party_member', '-is_invited_waiting', 'member_name')
         page = self.paginate_queryset(members)
-        if page is not None:
+        if party:
+            serializer = PartyTeamMemberSerializer(page, many=True)
+        else:
             serializer = TeamMemberSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = TeamMemberSerializer(members, many=True)
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @action(methods=['post'], detail=False)
     def find(self, request):
