@@ -1,18 +1,16 @@
 from django.urls import path
 from django.conf.urls import include
 from rest_framework import routers
-from .views_company import CompanyViewSet, ContractViewSet, InviteViewSet
+from .views_invite import InviteViewSet
 from .views_party import PartyViewSet, MembershipViewSet, VoteViewSet, TagViewSet
 from .views_team import TeamMemberViewSet, TeamViewSet, upload_team_image, delete_team_image, \
     upload_team_member_image, delete_team_member_image
 
 router = routers.DefaultRouter()
-router.register(r'company', CompanyViewSet)
 router.register(r'party', PartyViewSet)
 router.register(r'vote', VoteViewSet)
 router.register(r'membership', MembershipViewSet)
 router.register(r'invite', InviteViewSet)
-router.register(r'contract', ContractViewSet)
 router.register(r'team', TeamViewSet)
 router.register(r'member', TeamMemberViewSet)
 router.register(r'tag', TagViewSet)
