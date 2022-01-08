@@ -4,6 +4,7 @@ from rest_framework.decorators import action, api_view, parser_classes, permissi
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from common.models import CommonUser
+from matzip.handler import request_data_handler
 from .constants import InviteStatus
 from .models import TeamMember, Team, Invite, Membership
 from rest_framework import viewsets, status, permissions
@@ -19,10 +20,19 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        print(user)
         membership = TeamMember.objects.filter(user=user.id).values('team')
         queryset = self.queryset.filter(id__in=membership)
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        data = request_data_handler(request.data, ['name'])
+        if Team.objects.filter(name=data['name']):
+            return Response({'message': '이미 사용중인 이름입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = TeamSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = TeamSerializer(instance=serializer.instance)
+        return Response(data={**serializer.data, 'message': '팀을 생성했습니다.'}, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk, *args, **kwargs):
         data = request.data
@@ -33,6 +43,14 @@ class TeamViewSet(viewsets.ModelViewSet):
             serializer.save(**serializer.validated_data)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None, *args, **kwargs):
+        try:
+            team = Team.objects.get(pk=pk)
+            team.delete()
+            return Response(data={'message': '팀을 삭제했습니다.'}, status=status.HTTP_200_OK)
+        except Team.DoesNotExist:
+            return Response({'message': '팀을 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
     @action(detail=True)
     def members(self, request, pk=None):
