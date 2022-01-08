@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.utils.dateparse import parse_datetime
 
 from reviews.serializer import ReviewListSerializer
@@ -88,6 +89,20 @@ class TagDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TagListSerializer(serializers.ModelSerializer):
+    team_member = TeamMemberSerializer(read_only=True, many=False)
+    review = serializers.SerializerMethodField('get_review')
+
+    def get_review(self, instance):
+        serializer = ReviewListSerializer(instance=instance.review, read_only=True, many=False,
+                                          context={'team': self.context['team']})
+        return serializer.data
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
 class TagCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -96,7 +111,15 @@ class TagCreateSerializer(serializers.ModelSerializer):
 
 class PartyListSerializer(serializers.ModelSerializer):
     membership = MembershipSerializer(read_only=True, many=True)
-    tags = TagSerializer(read_only=True, many=True)
+    tag = serializers.SerializerMethodField('get_tag')
+
+    def get_tag(self, instance):
+        if not instance.tags.count():
+            return None
+        tag = instance.tags.annotate(count=Count('votes')).order_by('-count').first()
+        serializer = TagListSerializer(instance=tag, read_only=True, many=False,
+                                       context={'team': instance.team.id})
+        return serializer.data
 
     class Meta:
         model = Party
