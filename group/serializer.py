@@ -2,6 +2,7 @@ from django.db.models import Count
 from django.utils.dateparse import parse_datetime
 
 from reviews.serializer import ReviewListSerializer
+from .constants import InviteStatus
 from .models import Company, Contract, Team, TeamMember
 from rest_framework import serializers
 from .models import Vote, Party, Membership, Invite, Tag
@@ -129,10 +130,16 @@ class PartyListSerializer(serializers.ModelSerializer):
 class PartyDetailSerializer(serializers.ModelSerializer):
     membership = MembershipSerializer(read_only=True, many=True)
     tags = serializers.SerializerMethodField('get_tags')
+    invites = serializers.SerializerMethodField('get_invites')
 
     def get_tags(self, instance):
         serializer = TagDetailSerializer(instance=instance.tags, read_only=True, many=True,
                                          context={'team': instance.team.id})
+        return serializer.data
+
+    def get_invites(self, instance):
+        invites = Invite.objects.filter(party=instance.id, status=InviteStatus.WAITING.value)
+        serializer = InviteDetailSerializer(instance=invites, read_only=True, many=True)
         return serializer.data
 
     class Meta:
@@ -159,6 +166,16 @@ class TeamSerializer(serializers.ModelSerializer):
 class InviteSerializer(serializers.ModelSerializer):
     team = TeamSerializer(read_only=True, many=False)
     sender = TeamMemberSerializer(read_only=True, many=False)
+
+    class Meta:
+        model = Invite
+        fields = '__all__'
+
+
+class InviteDetailSerializer(serializers.ModelSerializer):
+    team = TeamSerializer(read_only=True, many=False)
+    sender = TeamMemberSerializer(read_only=True, many=False)
+    receiver = TeamMemberSerializer(read_only=True, many=False)
 
     class Meta:
         model = Invite
