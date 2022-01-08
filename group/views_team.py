@@ -107,41 +107,25 @@ def delete_team_image(request, pk):
 class TeamMemberViewSet(viewsets.ModelViewSet):
     queryset = TeamMember.objects.all()
     serializer_class = TeamMemberSerializer
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        data = request.data
-        if 'user' not in data:
-            return Response({'message': '유저를 입력해야 합니다.'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        try:
-            user = CommonUser.objects.get(pk=data['user'])
-        except CommonUser.DoesNotExist:
-            user = None
-        if not user:
-            return Response({'message': '존재하지 않는 유저입니다.'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        try:
-            same_user = TeamMember.objects.get(user=data['user'], team=data['team'])
-        except TeamMember.DoesNotExist:
-            same_user = None
-        if same_user:
+        data = request_data_handler(request.data, ['member_name', 'team'])
+        user = request.user
+        if TeamMember.objects.filter(user=user.id, team=data['team']):
             return Response({'message': '이미 가입된 유저입니다.'},
                             status=status.HTTP_400_BAD_REQUEST)
-        if 'member_name' not in data or data['member_name'] is None:
-            return Response({'message': '유저 이름을 입력해주세요.'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        try:
-            member = TeamMember.objects.get(member_name=data['member_name'])
-        except TeamMember.DoesNotExist:
-            member = None
-        if member:
+
+        if TeamMember.objects.filter(member_name=data['member_name']):
             return Response({'message': '이미 사용중인 이름입니다.'},
                             status=status.HTTP_400_BAD_REQUEST)
-        data[user] = user
+
+        data['user'] = user.id
         serializer = TeamMemberCreateSerializer(data=data)
         if serializer.is_valid():
             team_member = TeamMember.objects.create(**serializer.validated_data)
             team_member.save()
+            serializer = TeamMemberSerializer(instance=team_member)
             return Response({**serializer.data, 'message': '팀에 가입되었습니다.'}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -155,6 +139,36 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
             serializer.save(**serializer.validated_data)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None, *args, **kwargs):
+        try:
+            member = TeamMember.objects.get(pk=pk)
+            member.delete()
+            return Response(data={'message': '팀을 탈퇴했습니다.'}, status=status.HTTP_200_OK)
+        except TeamMember.DoesNotExist:
+            return Response({'message': '가입 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
+    def upload_image(self, request, pk=None):
+        if request.FILES:
+            request.data.image = request.FILES
+        try:
+            team_member = TeamMember.objects.get(pk=pk)
+        except TeamMember.DoesNotExist:
+            return Response({'message': '가입 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        serializer = TeamMemberSerializer(team_member, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**serializer.validated_data)
+        serializer = TeamMemberSerializer(instance=serializer.instance)
+        return Response(data={**serializer.data, 'message': '이미지를 등록했습니다.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['POST'])
+    def delete_image(self, request, pk=None):
+        team_member = TeamMember.objects.get(pk=pk)
+        team_member.image.delete()
+        team_member.save()
+        serializer = TeamMemberSerializer(instance=team_member)
+        return Response(data={**serializer.data, 'message': '이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
 
 
 @api_view(['post'])
