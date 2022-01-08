@@ -75,6 +75,7 @@ class Party(models.Model):
     date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     closed_at = models.DateTimeField(null=True, blank=True)
+    public = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
