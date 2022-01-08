@@ -4,7 +4,7 @@ from group.models import TeamMember
 
 
 class TeamMemberSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True, many=False)
+    # user = UserSerializer(read_only=True, many=False)
 
     class Meta:
         model = TeamMember
