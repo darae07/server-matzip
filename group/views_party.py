@@ -81,6 +81,7 @@ class PartyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        serializer = self.get_serializer(instance=serializer.instance)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk, *args, **kwargs):
@@ -224,6 +225,7 @@ class VoteViewSet(viewsets.ModelViewSet):
         serializer = VoteSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        serializer = VoteSerializer(instance=serializer.instance)
         return Response(data={**serializer.data, 'message': '투표가 생성되었습니다.'}, status=status.HTTP_201_CREATED)
 
 
@@ -262,4 +264,5 @@ class TagViewSet(viewsets.ModelViewSet):
         serializer = TagCreateSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        serializer = TagCreateSerializer(instance=serializer.instance)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)

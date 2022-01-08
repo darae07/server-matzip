@@ -49,6 +49,7 @@ class InviteViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             invite = Invite.objects.create(**serializer.validated_data)
             invite.save()
+            serializer = InviteCreateSerializer(instance=invite)
             return Response({**serializer.data, 'message': '초대했습니다.'}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors,
