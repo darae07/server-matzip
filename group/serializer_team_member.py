@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from common.serializers import UserSerializer
-from group.models import TeamMember
+from group.models_team import TeamMember
 
 
 class TeamMemberSerializer(serializers.ModelSerializer):

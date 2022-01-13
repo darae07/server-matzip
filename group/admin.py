@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Company,  Party, Membership, Contract, Vote, Invite, TeamMember, Team
+from .models_crew import Vote
+from .models_team import Company, Contract, Invite, TeamMember, Team
+from .models_party import Party, Membership
 
 # Register your models here.
 admin.site.register(Company)

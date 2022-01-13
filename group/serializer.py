@@ -3,9 +3,11 @@ from django.utils.dateparse import parse_datetime
 
 from reviews.serializer import ReviewListSerializer
 from .constants import InviteStatus
-from .models import Company, Contract, Team, TeamMember
+from .models_crew import Vote
+from .models_party import Membership, Party
+from .models_team import Company, Contract, Team, TeamMember
 from rest_framework import serializers
-from .models import Vote, Party, Membership, Invite, Tag
+from .models_team import Invite, Tag
 from stores.serializer import StoreSerializer
 from common.costume_serializers import FullUserSerializer
 from .serializer_team_member import TeamMemberSerializer

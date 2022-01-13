@@ -1,12 +1,8 @@
-import os
 import uuid
-
 from django.db import models
-from stores.models import Store, Menu
 from django.contrib.gis.db.models import PointField
 import os
-import hashlib
-from .constants import InviteStatus, MembershipStatus
+from .constants import InviteStatus
 
 
 def unique_path(instance, filename):
@@ -51,30 +47,6 @@ class TeamMember(models.Model):
         return self.member_name
 
 
-class Party(models.Model):
-    name = models.CharField(max_length=100)
-    team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
-    description = models.CharField(max_length=500, null=True, blank=True)
-    date = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    closed_at = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Membership(models.Model):
-    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
-    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
-    party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='membership')
-    date_joined = models.DateTimeField(auto_now_add=True, blank=True)
-    invite_reason = models.CharField(max_length=100, null=True, blank=True)
-    status = models.SmallIntegerField(default=MembershipStatus.ALLOWED.value)
-
-    def __str__(self):
-        return self.team_member.member_name
-
-
 class Invite(models.Model):
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
     sender = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
@@ -86,16 +58,6 @@ class Invite(models.Model):
 
     def __str__(self):
         return self.receiver.member_name
-
-
-class Vote(models.Model):
-    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
-    party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True)
-    tag = models.ForeignKey('group.Tag', on_delete=models.CASCADE, null=True, blank=True, related_name='votes')
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-
-    def __str__(self):
-        return self.team_member.member_name
 
 
 class Company(models.Model):

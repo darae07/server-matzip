@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from .models import Store, Menu, Category
-from group.models import Contract, Company
+from group.models_team import Contract, Company
 from reviews.models import Review
 from rest_framework import viewsets, pagination, status
 from .serializer import StoreSerializer, CategorySerializer, MenuSerializer

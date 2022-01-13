@@ -15,7 +15,10 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Party, Membership, Vote, Tag, TeamMember, Team
+
+from .models_crew import Vote
+from .models_party import Party, Membership
+from .models_team import Tag, TeamMember, Team
 from common.models import CommonUser
 from rest_framework import viewsets, status
 from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \

@@ -18,7 +18,7 @@ from matzip.handler import request_data_handler
 from .models import CommonUser, ResetPasswordCode
 from .costume_serializers import FullUserSerializer
 from .serializers import UserSerializer
-from group.models import Contract
+from group.models_team import Contract
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client

@@ -6,7 +6,8 @@ from rest_framework.response import Response
 from common.models import CommonUser
 from matzip.handler import request_data_handler
 from .constants import InviteStatus
-from .models import TeamMember, Team, Invite, Membership
+from .models_party import Membership
+from .models_team import TeamMember, Team, Invite
 from rest_framework import viewsets, status, permissions
 from .serializer import TeamSerializer, TeamFindSerializer, TeamListSerializer
 from .serializer_team_member import TeamMemberSerializer, TeamMemberCreateSerializer, PartyTeamMemberSerializer

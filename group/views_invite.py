@@ -5,7 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from matzip.handler import request_data_handler
-from .models import Invite, TeamMember, Party
+from .models_party import Party
+from .models_team import Invite, TeamMember
 from rest_framework import viewsets, status
 from .serializer import InviteSerializer, InviteCreateSerializer, MembershipCreateSerializer
 from django.db.models import Q
