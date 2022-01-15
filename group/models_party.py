@@ -10,6 +10,8 @@ class Party(models.Model):
     date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     closed_at = models.DateTimeField(null=True, blank=True)
+    eat = models.BooleanField(default=False)
+    keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
