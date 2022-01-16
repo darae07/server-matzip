@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from group.constants import InviteStatus
 from group.models_party import Membership
 from group.models_team import Team, TeamMember, Invite
-from group.serializer import TeamSerializer, TeamListSerializer, TeamFindSerializer
+from group.serializers.team import TeamSerializer, TeamListSerializer, TeamFindSerializer
 from group.serializer_team_member import PartyTeamMemberSerializer, TeamMemberSerializer
 from matzip.handler import request_data_handler
 
