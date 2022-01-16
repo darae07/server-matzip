@@ -28,7 +28,7 @@ class Lunch(models.Model):
 def unique_path(instance, filename):
     ext = filename.split('.')[-1]
     filename = "%s.%s" % (uuid.uuid4(), ext)
-    return os.path.join('group/team', filename)
+    return os.path.join('group/crew', filename)
 
 
 class Crew(models.Model):
