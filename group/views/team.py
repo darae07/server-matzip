@@ -127,6 +127,9 @@ class TeamViewSet(viewsets.ModelViewSet):
         serializer = TeamSerializer(instance=team)
         return Response(data={**serializer.data, 'message': '이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
 
+    # 회사 선택: 회사 복수개 설정시 추가
+    # def select(self):
+
 
 class TeamMemberViewSet(viewsets.ModelViewSet):
     queryset = TeamMember.objects.all()
