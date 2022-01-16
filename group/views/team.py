@@ -9,7 +9,7 @@ from group.constants import InviteStatus
 from group.models_party import Membership
 from group.models_team import Team, TeamMember, Invite
 from group.serializers.team import TeamSerializer, TeamListSerializer, TeamFindSerializer
-from group.serializer_team_member import PartyTeamMemberSerializer, TeamMemberSerializer, TeamMemberCreateSerializer
+from group.serializers.team_member import PartyTeamMemberSerializer, TeamMemberSerializer, TeamMemberCreateSerializer
 from matzip.handler import request_data_handler
 
 

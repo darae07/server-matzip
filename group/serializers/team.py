@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from group.models_team import Team
 from group.serializer import PartyListSerializer
-from group.serializer_team_member import TeamMemberSerializer
+from group.serializers.team_member import TeamMemberSerializer
 
 
 class TeamSerializer(serializers.ModelSerializer):

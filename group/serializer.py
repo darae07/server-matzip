@@ -1,16 +1,14 @@
 from django.db.models import Count
-from django.utils.dateparse import parse_datetime
 
 from reviews.serializer import ReviewListSerializer
 from .constants import InviteStatus
 from .models_crew import Vote
 from .models_party import Membership, Party
-from .models_team import Company, Contract, Team, TeamMember
+from .models_team import Company, Contract
 from rest_framework import serializers
 from .models_team import Invite, Tag
-from stores.serializer import StoreSerializer
 from common.costume_serializers import FullUserSerializer
-from .serializer_team_member import TeamMemberSerializer
+from group.serializers.team_member import TeamMemberSerializer
 
 
 class CompanySerializer(serializers.ModelSerializer):

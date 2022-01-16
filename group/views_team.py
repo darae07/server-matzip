@@ -1,13 +1,10 @@
-from django.db.models import Exists, OuterRef, Prefetch
-from django.http import Http404
-from rest_framework.decorators import action, api_view, parser_classes, permission_classes
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from common.models import CommonUser
 from matzip.handler import request_data_handler
-from .models_team import TeamMember, Team, Invite
-from rest_framework import viewsets, status, permissions
-from .serializer_team_member import TeamMemberSerializer, TeamMemberCreateSerializer, PartyTeamMemberSerializer
+from .models_team import TeamMember
+from rest_framework import viewsets, status
+from group.serializers.team_member import TeamMemberSerializer, TeamMemberCreateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
 

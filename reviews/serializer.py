@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Review, ReviewImage, Comment, Like
 from common.costume_serializers import FullUserSerializer
-from group.serializer_team_member import TeamMemberCreateSerializer
+from group.serializers.team_member import TeamMemberCreateSerializer
 from group.models_team import TeamMember
 from .constants import LikeStatus
 
