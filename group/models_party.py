@@ -1,6 +1,7 @@
 from django.db import models
 from .constants import MembershipStatus
 from stores.models import Keyword
+from .managers.party import PartyManager
 
 
 class Party(models.Model):
@@ -11,6 +12,8 @@ class Party(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
     eat = models.BooleanField(default=False)
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE, null=True, blank=True)
+
+    objects = PartyManager()
 
     def __str__(self):
         return self.name
