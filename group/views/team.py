@@ -136,17 +136,19 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request_data_handler(request.data, ['member_name', 'team'])
         user = request.user
-        if TeamMember.objects.filter(user=user.id, team=data['team']):
+        my_memberships = TeamMember.objects.filter(user=user.id)
+        if my_memberships.filter(team=data['team']):
             return Response({'message': '이미 가입된 유저입니다.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        if TeamMember.objects.filter(member_name=data['member_name']):
+        if my_memberships.filter(member_name=data['member_name']):
             return Response({'message': '이미 사용중인 이름입니다.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
         data['user'] = user.id
         serializer = TeamMemberCreateSerializer(data=data)
         if serializer.is_valid():
+            my_memberships.update(is_selected=False)
             team_member = TeamMember.objects.create(**serializer.validated_data)
             team_member.save()
             serializer = TeamMemberSerializer(instance=team_member)
@@ -157,13 +159,16 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, pk, *args, **kwargs):
         data = request.data
 
-        team_member = TeamMember.objects.get(pk=pk)
-        serializer = self.serializer_class(team_member, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save(**serializer.validated_data)
-            serializer = self.serializer_class(serializer.instance)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            team_member = TeamMember.objects.get(pk=pk)
+            serializer = self.serializer_class(team_member, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save(**serializer.validated_data)
+                serializer = self.serializer_class(serializer.instance)
+                return Response(data={**serializer.data, 'message': '내 정보를 업데이트 했습니다.'}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except TeamMember.DoesNotExist:
+            return Response({'message': '가입 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
     def destroy(self, request, pk=None, *args, **kwargs):
         try:
