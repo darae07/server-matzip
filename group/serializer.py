@@ -110,51 +110,6 @@ class TagCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PartyListSerializer(serializers.ModelSerializer):
-    membership = MembershipSerializer(read_only=True, many=True)
-    tag = serializers.SerializerMethodField('get_tag')
-
-    def get_tag(self, instance):
-        if not instance.tags.count():
-            return None
-        tag = instance.tags.annotate(count=Count('votes')).order_by('-count').first()
-        serializer = TagListSerializer(instance=tag, read_only=True, many=False,
-                                       context={'team': instance.team.id})
-        return serializer.data
-
-    class Meta:
-        model = Party
-        fields = '__all__'
-
-
-class PartyDetailSerializer(serializers.ModelSerializer):
-    membership = MembershipSerializer(read_only=True, many=True)
-    tags = serializers.SerializerMethodField('get_tags')
-    invites = serializers.SerializerMethodField('get_invites')
-
-    def get_tags(self, instance):
-        serializer = TagDetailSerializer(instance=instance.tags, read_only=True, many=True,
-                                         context={'team': instance.team.id})
-        return serializer.data
-
-    def get_invites(self, instance):
-        invites = Invite.objects.filter(party=instance.id, status=InviteStatus.WAITING.value)
-        serializer = InviteDetailSerializer(instance=invites, read_only=True, many=True)
-        return serializer.data
-
-    class Meta:
-        model = Party
-        fields = '__all__'
-
-
-class PartySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Party
-        fields = '__all__'
-        list_serializer_class = PartyListSerializer
-
-
 class InviteSerializer(serializers.ModelSerializer):
     # team = TeamSerializer(read_only=True, many=False)
     sender = TeamMemberSerializer(read_only=True, many=False)
@@ -175,7 +130,7 @@ class InviteDetailSerializer(serializers.ModelSerializer):
 
 
 class InviteCreateSerializer(serializers.ModelSerializer):
-    party = PartySerializer(read_only=True, many=False)
+    # party = PartySerializer(read_only=True, many=False)
     party_id = serializers.IntegerField(write_only=True)
     # team = serializers.RelatedField(read_only=True, required=True)
     # sender = serializers.RelatedField(read_only=True, required=True)
