@@ -136,6 +136,13 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request_data_handler(request.data, ['member_name', 'team'])
         user = request.user
+
+        try:
+            team = Team.objects.get(id=data['team'])
+        except Team.DoesNotExist:
+            return Response({'message': '회사를 찾을 수 없습니다.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         my_memberships = TeamMember.objects.filter(user=user.id)
         if my_memberships.filter(team=data['team']):
             return Response({'message': '이미 가입된 유저입니다.'},
