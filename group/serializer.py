@@ -157,42 +157,8 @@ class PartySerializer(serializers.ModelSerializer):
         list_serializer_class = PartyListSerializer
 
 
-class TeamSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Team
-        exclude = ('join_code',)
-
-
-class TeamFindSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Team
-        fields = '__all__'
-
-
-class TeamListSerializer(serializers.ModelSerializer):
-    my_membership = serializers.SerializerMethodField('get_my_membership')
-
-    def get_my_membership(self, instance):
-        serializer = TeamMemberSerializer(instance=instance.members.first(), many=False, read_only=True)
-        return serializer.data
-
-    class Meta:
-        model = Team
-        exclude = ('join_code',)
-
-
-class TeamDetailSerializer(serializers.ModelSerializer):
-    party = PartyListSerializer(read_only=True, many=True)
-
-    class Meta:
-        model = Team
-        fields = '__all__'
-
-
 class InviteSerializer(serializers.ModelSerializer):
-    team = TeamSerializer(read_only=True, many=False)
+    # team = TeamSerializer(read_only=True, many=False)
     sender = TeamMemberSerializer(read_only=True, many=False)
 
     class Meta:
@@ -201,7 +167,7 @@ class InviteSerializer(serializers.ModelSerializer):
 
 
 class InviteDetailSerializer(serializers.ModelSerializer):
-    team = TeamSerializer(read_only=True, many=False)
+    # team = TeamSerializer(read_only=True, many=False)
     sender = TeamMemberSerializer(read_only=True, many=False)
     receiver = TeamMemberSerializer(read_only=True, many=False)
 
