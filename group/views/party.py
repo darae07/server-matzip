@@ -9,7 +9,7 @@ import datetime
 
 from group.models_party import Party
 from group.models_team import TeamMember
-from group.serializer import PartySerializer, PartyDetailSerializer, PartyListSerializer
+from group.serializers.party import PartySerializer, PartyDetailSerializer, PartyListSerializer
 from matzip.handler import request_data_handler
 
 

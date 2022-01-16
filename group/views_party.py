@@ -21,9 +21,10 @@ from .models_party import Party, Membership
 from .models_team import Tag, TeamMember, Team
 from common.models import CommonUser
 from rest_framework import viewsets, status
-from .serializer import PartySerializer, PartyListSerializer, MembershipSerializer, VoteSerializer, \
-    MembershipCreateSerializer, VoteListSerializer, TagCreateSerializer, TagSerializer, PartyDetailSerializer
+from .serializer import MembershipSerializer, VoteSerializer, \
+    MembershipCreateSerializer, VoteListSerializer, TagCreateSerializer, TagSerializer
 from matzip.handler import request_data_handler
+from .serializers.party import PartySerializer, PartyListSerializer, PartyDetailSerializer
 import datetime
 
 
