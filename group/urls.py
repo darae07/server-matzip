@@ -3,7 +3,9 @@ from django.conf.urls import include
 from rest_framework import routers
 from .views_invite import InviteViewSet
 from .views_party import PartyViewSet, MembershipViewSet, VoteViewSet, TagViewSet
-from .views_team import TeamMemberViewSet, TeamViewSet
+from .views_team import TeamMemberViewSet
+from .views.team import TeamViewSet
+
 router = routers.DefaultRouter()
 router.register(r'party', PartyViewSet)
 router.register(r'vote', VoteViewSet)
