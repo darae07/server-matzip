@@ -43,10 +43,13 @@ class Crew(models.Model):
 
 class CrewMembership(models.Model):
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True)
-    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
+    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
+                                    related_name='crew_team_profile')
     crew = models.ForeignKey(Crew, on_delete=models.CASCADE, related_name='crew_membership')
     date_joined = models.DateTimeField(auto_now_add=True, blank=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
+    invite_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
+                                      related_name='crew_sender_profile')
     status = models.SmallIntegerField(default=MembershipStatus.ALLOWED.value)
 
     def __str__(self):
