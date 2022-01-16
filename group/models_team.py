@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.gis.db.models import PointField
 import os
 from .constants import InviteStatus
+from .managers.team import TeamMemberManager
 
 
 def unique_path(instance, filename):
@@ -43,6 +44,8 @@ class TeamMember(models.Model):
     title = models.CharField(max_length=6, blank=True, null=True)
     is_selected = models.BooleanField(default=True)
 
+    objects = TeamMemberManager()
+    
     def __str__(self):
         return self.member_name
 
