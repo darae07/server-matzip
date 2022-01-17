@@ -52,6 +52,7 @@ class VoteSerializer(serializers.ModelSerializer):
 class MembershipSerializer(serializers.ModelSerializer):
     user = FullUserSerializer(read_only=True, many=False)
     team_member = TeamMemberSerializer(read_only=True, many=False)
+    invite_member = TeamMemberSerializer(read_only=True, many=False)
     # vote = VoteSerializer(read_only=True, many=False)
 
     class Meta:
