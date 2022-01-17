@@ -1,6 +1,8 @@
+from django.db.models import F, Q
 from rest_framework import serializers
 
 from common.costume_serializers import FullUserSerializer
+from group.constants import MembershipStatus
 from group.models_party import Party, Membership
 from group.serializers.team_member import TeamMemberSerializer
 
@@ -24,7 +26,13 @@ class MembershipCreateSerializer(serializers.ModelSerializer):
 
 
 class PartyListSerializer(serializers.ModelSerializer):
-    membership = MembershipSerializer(read_only=True, many=True)
+    membership = serializers.SerializerMethodField('get_membership')
+
+    def get_membership(self, instance):
+        queryset = instance.membership.filter(status=~Q(MembershipStatus.DENIED.value))\
+            .order_by('status', '-created_at')
+        serializer = MembershipSerializer(queryset, many=True)
+        return serializer.data
 
     class Meta:
         model = Party
