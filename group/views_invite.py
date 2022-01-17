@@ -8,7 +8,8 @@ from matzip.handler import request_data_handler
 from .models_party import Party
 from .models_team import Invite, TeamMember
 from rest_framework import viewsets, status
-from .serializer import InviteSerializer, InviteCreateSerializer, MembershipCreateSerializer
+from .serializer import InviteSerializer, InviteCreateSerializer
+from .serializers.party import MembershipCreateSerializer
 from django.db.models import Q
 from .constants import InviteStatus
 
