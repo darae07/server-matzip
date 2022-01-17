@@ -24,7 +24,8 @@ class Membership(models.Model):
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
                                     related_name='party_team_profile')
     party = models.ForeignKey(Party, on_delete=models.CASCADE, related_name='membership')
-    date_joined = models.DateTimeField(auto_now_add=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    date_joined = models.DateTimeField(blank=True, null=True)
     invite_reason = models.CharField(max_length=100, null=True, blank=True)
     invite_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True,
                                       related_name='party_sender_profile')
