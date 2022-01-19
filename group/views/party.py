@@ -69,7 +69,7 @@ class PartyViewSet(viewsets.ModelViewSet):
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         data = request_data_handler(request.data, ['name'], ['description'])
-        if Party.objects.filter(team=team_member.team, name=data['name']):
+        if Party.objects.filter(team=team_member.team, name=data['name']).first():
             return Response({'message': '파티명이 사용중입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         data['team'] = team_member.team.id
@@ -253,7 +253,7 @@ class MembershipViewSet(viewsets.ModelViewSet):
         party = data['party']
         user = data['user']
 
-        same_membership = Membership.objects.filter(team_member__user=user, party=party)
+        same_membership = Membership.objects.filter(team_member__user=user, party=party).first()
         if same_membership:
             return Response({'message': 'the same membership exists'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
