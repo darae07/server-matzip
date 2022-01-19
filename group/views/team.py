@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from group.constants import InviteStatus
-from group.models_party import Membership
+from group.models_party import Membership, Party
 from group.models_team import Team, TeamMember, Invite
 from group.serializers.team import TeamSerializer, TeamListSerializer, TeamFindSerializer
 from group.serializers.team_member import PartyTeamMemberSerializer, TeamMemberSerializer, TeamMemberCreateSerializer
@@ -77,17 +77,23 @@ class TeamViewSet(viewsets.ModelViewSet):
         except Team.DoesNotExist:
             return Response({'message': '회사를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    @action(detail=True)
-    def members(self, request, pk=None):
-        members = TeamMember.objects.filter(team=pk).order_by('member_name')
+    @action(detail=False)
+    def members(self, request):
+        user = request.user
+        my_team_profile = TeamMember.objects.get_my_team_profile(user)
+        members = TeamMember.objects.filter(team=my_team_profile.team.id).order_by('member_name')
 
-        # membership 개발후 수정
         party = self.request.query_params.get('party')
-        if party:
+        try:
+            party_instance = Party.objects.get(id=party)
             members = members.annotate(
-                is_invited_waiting=Exists(Invite.objects.filter(receiver=OuterRef('id'), party=party, status=InviteStatus.WAITING.value)),
+                is_invited_waiting=Exists(Invite.objects.filter(receiver=OuterRef('id'),
+                                                                party=party, status=InviteStatus.WAITING.value)),
                 is_party_member=Exists(Membership.objects.filter(party=party, team_member=OuterRef('id')))
             ).order_by('-is_party_member', '-is_invited_waiting', 'member_name')
+        except Party.DoesNotExist:
+            pass
+
         page = self.paginate_queryset(members)
         if party:
             serializer = PartyTeamMemberSerializer(page, many=True)

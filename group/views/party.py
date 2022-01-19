@@ -17,6 +17,7 @@ from ..constants import MembershipStatus
 
 class PartyViewSet(viewsets.ModelViewSet):
     queryset = Party.objects.get_today_party_list()
+    # queryset = Party.objects.all()
     serializer_class = {
         'create': PartySerializer,
         'list': PartyListSerializer,
