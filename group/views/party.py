@@ -12,6 +12,7 @@ from group.models_team import TeamMember
 from group.serializers.party import PartySerializer, PartyDetailSerializer, PartyListSerializer, \
     MembershipCreateSerializer, MembershipSerializer
 from matzip.handler import request_data_handler
+from stores.models import Keyword, Category
 from ..constants import MembershipStatus
 
 
@@ -68,11 +69,14 @@ class PartyViewSet(viewsets.ModelViewSet):
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        data = request_data_handler(request.data, ['name'], ['description'])
+        data = request_data_handler(request.data, ['name', 'keyword'], ['description', 'category'])
         if Party.objects.filter(team=team_member.team, name=data['name']).first():
             return Response({'message': '파티명이 사용중입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        category = Category.objects.filter(id=data['category']).first()
+        keyword = Keyword.objects.hit_keyword(name=data['keyword'], team=team_member.team, category=category)
         data['team'] = team_member.team.id
+        data['keyword'] = keyword.id
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
