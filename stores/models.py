@@ -3,6 +3,7 @@ from django.db.models import Q
 from haversine import haversine
 from django.contrib.gis.db.models import PointField
 from group.models_team import Team
+from stores.managers.keyword import KeywordManager
 
 
 class Category(models.Model):
@@ -47,6 +48,8 @@ class Keyword(models.Model):
     hit_count = models.IntegerField(default=0)
     eat_count = models.IntegerField(default=0)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
+
+    objects = KeywordManager()
 
     def __str__(self):
         return self.name
