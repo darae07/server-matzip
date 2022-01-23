@@ -49,7 +49,7 @@ class PartyViewSet(viewsets.ModelViewSet):
 
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-        queryset = queryset.filter(team=team_member.team)
+        queryset = queryset.filter(team=team_member.team).prefetch_related('membership')
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
@@ -80,7 +80,7 @@ class PartyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        serializer = self.get_serializer(instance=serializer.instance)
+        serializer = PartyDetailSerializer(instance=serializer.instance)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk, *args, **kwargs):
