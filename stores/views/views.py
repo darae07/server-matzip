@@ -4,11 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from .models import Store, Menu, Category
+from stores.models import Store, Menu, Category
 from group.models_team import Contract, Company
 from reviews.models import Review
 from rest_framework import viewsets, pagination, status
-from .serializer import StoreSerializer, CategorySerializer, MenuSerializer
+from stores.serializer import StoreSerializer, CategorySerializer, MenuSerializer
 from rest_framework.filters import SearchFilter
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import GeometryDistance
