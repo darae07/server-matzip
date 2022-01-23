@@ -83,6 +83,9 @@ class PartyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        now = datetime.datetime.now()
+        membership = Membership(team_member=team_member, party=serializer.instance, date_joined=now)
+        membership.save()
         serializer = PartyDetailSerializer(instance=serializer.instance)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
