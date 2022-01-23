@@ -31,14 +31,10 @@ class PartyListSerializer(serializers.ModelSerializer):
     keyword = KeywordSerializer(read_only=True, many=False)
 
     def get_membership(self, instance):
-        membership = instance.membership
-        if membership.count():
-            queryset = membership.filter(status=~Q(MembershipStatus.DENIED.value))\
-                .order_by('status', '-created_at')
-            serializer = MembershipSerializer(queryset, many=True)
-            return serializer.data
-        else:
-            return []
+        queryset = instance.membership.filter(~Q(status=MembershipStatus.DENIED.value))\
+            .order_by('status', '-created_at')
+        serializer = MembershipSerializer(queryset, many=True, read_only=True)
+        return serializer.data
 
     class Meta:
         model = Party
