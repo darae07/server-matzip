@@ -1,4 +1,5 @@
 from django.db.models import F, Q
+from django.utils.dateformat import DateFormat
 from django.utils.dateparse import parse_datetime
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -14,6 +15,7 @@ from group.serializers.party import PartySerializer, PartyDetailSerializer, Part
 from matzip.handler import request_data_handler
 from stores.models import Keyword, Category
 from ..constants import MembershipStatus
+from matzip.utils.datetime_func import today_min, today_max
 
 
 class PartyViewSet(viewsets.ModelViewSet):
@@ -70,7 +72,8 @@ class PartyViewSet(viewsets.ModelViewSet):
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         data = request_data_handler(request.data, ['name', 'keyword'], ['description', 'category'])
-        if Party.objects.filter(team=team_member.team, name=data['name']).first():
+        if Party.objects.filter(team=team_member.team, name=data['name'], created_at__range=(today_min, today_max))\
+                .first():
             return Response({'message': '파티명이 사용중입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         category = Category.objects.filter(id=data['category']).first()
@@ -100,10 +103,15 @@ class PartyViewSet(viewsets.ModelViewSet):
     def close(self, request, pk=None):
         try:
             party = Party.objects.get(pk=pk)
+            if party.eat:
+                return Response({'message': '이미 종료된 파티입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
             now = datetime.datetime.now()
             party.closed_at = now
+            party.keyword.eat_count += 1
+            party.eat = True
             party.save()
-            serializer = PartySerializer(party)
+            party.keyword.save()
+            serializer = PartyDetailSerializer(party)
             return Response(data={**serializer.data, 'message': '파티가 종료되었습니다.'}, status=status.HTTP_200_OK)
         except Party.DoesNotExist:
             return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
