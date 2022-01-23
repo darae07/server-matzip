@@ -20,8 +20,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         'list': ReviewListSerializer,
         'retrieve': ReviewRetrieveSerializer
     }
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = 5
+    # pagination_class = PageNumberPagination
+    # pagination_class.page_size = 10
     ordering = ['-created_at']
     company = None
 
