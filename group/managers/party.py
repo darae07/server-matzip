@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models.manager import BaseManager
 
-from matzip.utils.datetime import today_min, today_max
+from matzip.utils.datetime_func import today_min, today_max
 
 
 class PartyQuerySet(models.QuerySet):

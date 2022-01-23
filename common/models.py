@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, AbstractUser
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from matzip.utils.datetime import get_after_minutes
+from matzip.utils.datetime_func import get_after_minutes
 from .managers import CustomUserManager
 
 
