@@ -60,7 +60,12 @@ class CrewListSerializer(serializers.ModelSerializer):
 
 
 class CrewDetailSerializer(CrewListSerializer):
-    lunches = LunchListSerializer(read_only=True, many=True)
+    lunches = serializers.SerializerMethodField('get_lunches')
+
+    def get_lunches(self, instance):
+        queryset = instance.lunches.get_today_lunch_list()
+        serializer = LunchListSerializer(queryset, read_only=True, many=True)
+        return serializer.data
 
 
 class CrewSerializer(serializers.ModelSerializer):

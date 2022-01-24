@@ -37,7 +37,7 @@ def unique_path(instance, filename):
 class Crew(models.Model):
     name = models.CharField(default=None, max_length=100)
     image = models.ImageField(upload_to=unique_path, default='')
-    title = models.CharField(default=None, max_length=300)
+    title = models.CharField(default=None, max_length=300, null=True, blank=True)
     team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
