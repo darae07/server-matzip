@@ -7,7 +7,7 @@ from stores.models import Keyword
 
 class Vote(models.Model):
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
-    lunch = models.ForeignKey('group.Lunch', on_delete=models.CASCADE, null=True, blank=True)
+    lunch = models.ForeignKey('group.Lunch', on_delete=models.CASCADE, null=True, blank=True, related_name='votes')
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     def __str__(self):
@@ -19,7 +19,7 @@ class Lunch(models.Model):
     title = models.CharField(default=None, max_length=300)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     eat = models.BooleanField(default=False)
-    crew = models.ForeignKey('group.Crew', on_delete=models.CASCADE, null=True, blank=True)
+    crew = models.ForeignKey('group.Crew', on_delete=models.CASCADE, null=True, blank=True, related_name='lunches')
 
     def __str__(self):
         return self.title
