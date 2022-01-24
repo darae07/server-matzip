@@ -2,6 +2,7 @@ import os
 import uuid
 from django.db import models
 from group.constants import MembershipStatus
+from group.managers.crew import LunchManager
 from stores.models import Keyword
 
 
@@ -20,6 +21,8 @@ class Lunch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     eat = models.BooleanField(default=False)
     crew = models.ForeignKey('group.Crew', on_delete=models.CASCADE, null=True, blank=True, related_name='lunches')
+
+    objects = LunchManager()
 
     def __str__(self):
         return self.title
