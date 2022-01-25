@@ -145,8 +145,8 @@ class CrewMembershipViewSet(viewsets.ModelViewSet):
         if same_membership:
             if same_membership.status == MembershipStatus.ALLOWED.value:
                 return Response({'message': '이미 가입한 크루입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-            if same_membership.status == MembershipStatus.WAITING:
-                same_membership.status = MembershipStatus.ALLOWED
+            if same_membership.status == MembershipStatus.WAITING.value:
+                same_membership.status = MembershipStatus.ALLOWED.value
                 same_membership.date_joined = now
                 same_membership.save()
                 serializer = CrewMembershipSerializer(same_membership)

@@ -158,8 +158,8 @@ class MembershipViewSet(viewsets.ModelViewSet):
         if same_membership:
             if same_membership.status == MembershipStatus.ALLOWED.value:
                 return Response({'message': '이미 가입한 파티입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-            if same_membership.status == MembershipStatus.WAITING:
-                same_membership.status = MembershipStatus.ALLOWED
+            if same_membership.status == MembershipStatus.WAITING.value:
+                same_membership.status = MembershipStatus.ALLOWED.value
                 same_membership.date_joined = now
                 same_membership.save()
                 serializer = MembershipSerializer(same_membership)
