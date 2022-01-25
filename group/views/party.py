@@ -191,7 +191,6 @@ class MembershipViewSet(viewsets.ModelViewSet):
             return Response({'message': '존재하지 않는 파티입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         same_membership = Membership.objects.filter(team_member=team_member_id, party=data['party']).first()
         if same_membership:
-            same_membership = same_membership
             if same_membership.status == MembershipStatus.ALLOWED.value:
                 return Response({'message': '이미 가입한 파티입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
             if same_membership.status == MembershipStatus.WAITING.value:
@@ -249,7 +248,8 @@ class MembershipViewSet(viewsets.ModelViewSet):
         user = request.user
         my_team_profile = TeamMember.objects.get_my_team_profile(user)
 
-        queryset = self.queryset.filter(status=MembershipStatus.WAITING.value).filter(Q(team_member=my_team_profile.id) | Q(invite_member=my_team_profile.id))\
+        queryset = self.queryset.filter(status=MembershipStatus.WAITING.value)\
+            .filter(Q(team_member=my_team_profile.id) | Q(invite_member=my_team_profile.id))\
             .order_by(F('invite_member').desc(nulls_first=True), '-created_at')
         page = self.paginate_queryset(queryset)
         serializer = MembershipSerializer(page, many=True)
