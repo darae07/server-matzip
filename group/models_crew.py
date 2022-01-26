@@ -39,6 +39,7 @@ class Crew(models.Model):
     image = models.ImageField(upload_to=unique_path, default='')
     title = models.CharField(default=None, max_length=300, null=True, blank=True)
     team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     def __str__(self):
         return self.name

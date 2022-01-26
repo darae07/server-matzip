@@ -175,6 +175,7 @@ class MembershipViewSet(viewsets.ModelViewSet):
         return Response(data={**serializer.data, 'message': '파티에 가입했습니다.'}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['POST'])
+    # TODO 여러명 한번에 초대 되게 하기(배열)
     def invite(self, request, *args, **kwargs):
         user = request.user
         data = request_data_handler(request.data, ['party', 'receiver'], ['invite_reason'])

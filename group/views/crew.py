@@ -9,10 +9,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from group.constants import MembershipStatus
-from group.models_crew import Crew, CrewMembership
+from group.models_crew import Crew, CrewMembership, Lunch
 from group.models_team import TeamMember
 from group.serializers.crew import CrewListSerializer, CrewDetailSerializer, CrewSerializer, \
-    CrewMembershipSerializer, CrewMembershipCreateSerializer
+    CrewMembershipSerializer, CrewMembershipCreateSerializer, LunchSerializer, LunchListSerializer
 from matzip.handler import request_data_handler
 
 
@@ -76,12 +76,10 @@ class CrewViewSet(viewsets.ModelViewSet):
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         my_crew_membership_list = CrewMembership.objects.filter(team_member=team_member).values('crew')
-        queryset = self.queryset.filter(team=team_member.team.id, id__in=my_crew_membership_list)
-        my_crew = queryset.first()
-        if my_crew:
-            serializer = CrewDetailSerializer(my_crew)
-            return Response({'message': '나의 크루를 불러왔습니다.', **serializer.data}, status=status.HTTP_200_OK)
-        return Response({'message': '나의 크루를 찾을 수 없습니다.'}, status=status.HTTP_200_OK)
+        queryset = self.queryset.filter(team=team_member.team.id, id__in=my_crew_membership_list).order_by('created_at')
+        page = self.paginate_queryset(queryset)
+        serializer = CrewDetailSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
     def upload_image(self, request, pk=None):
@@ -162,6 +160,7 @@ class CrewMembershipViewSet(viewsets.ModelViewSet):
         return Response({'message': '크루에 가입했습니다.', **serializer.data}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['POST'])
+    # TODO 여러명 한번에 초대 되게 하기(배열)
     def invite(self, request):
         user = request.user
         data = request_data_handler(request.data, ['crew', 'receiver'], ['invite_reason'])
