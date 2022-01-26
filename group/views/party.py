@@ -89,7 +89,7 @@ class PartyViewSet(viewsets.ModelViewSet):
         serializer = PartyDetailSerializer(instance=serializer.instance)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-    def partial_update(self, request, pk, *args, **kwargs):
+    def partial_update(self, request, pk=None, *args, **kwargs):
         data = request.data
         try:
             party = Party.objects.get(pk=pk)
