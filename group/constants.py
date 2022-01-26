@@ -8,4 +8,5 @@ class InviteStatus(Enum):
 
 class MembershipStatus(Enum):
     ALLOWED = 1
-    DENIED = 2
+    WAITING = 2
+    DENIED = 3

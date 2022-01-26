@@ -1,4 +1,4 @@
-from group.models import Contract
+from group.models_team import Contract
 from group.serializer_contract import ContractSerializer
 from .serializers import UserSerializer
 from rest_framework import serializers

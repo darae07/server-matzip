@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import group.models
+import group.models_team
 
 
 class Migration(migrations.Migration):
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100, unique=True)),
-                ('image', models.ImageField(default='', upload_to=group.models.unique_path)),
+                ('image', models.ImageField(default='', upload_to=group.models_team.unique_path)),
                 ('title', models.CharField(blank=True, max_length=300, null=True)),
             ],
         ),

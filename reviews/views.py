@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from .models import ReviewImage, Review, Comment, Like
-from group.models import TeamMember
+from group.models_team import TeamMember
 from rest_framework import viewsets, status, pagination
 from .serializer import ReviewImageSerializer, ReviewSerializer, ReviewListSerializer,\
     ReviewRetrieveSerializer, CommentSerializer, CommentListSerializer, LikeInReviewListSerializer, LikeSerializer
@@ -20,8 +20,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         'list': ReviewListSerializer,
         'retrieve': ReviewRetrieveSerializer
     }
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = 5
+    # pagination_class = PageNumberPagination
+    # pagination_class.page_size = 10
     ordering = ['-created_at']
     company = None
 

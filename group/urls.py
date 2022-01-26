@@ -1,26 +1,24 @@
 from django.urls import path
 from django.conf.urls import include
 from rest_framework import routers
-from .views_company import CompanyViewSet, ContractViewSet, InviteViewSet
-from .views_party import PartyViewSet, MembershipViewSet, VoteViewSet, TagViewSet
-from .views_team import TeamMemberViewSet, TeamViewSet, upload_team_image, delete_team_image, \
-    upload_team_member_image, delete_team_member_image
+from .views_invite import InviteViewSet
+from .views_party import VoteViewSet, TagViewSet
+from .views.team import TeamViewSet, TeamMemberViewSet
+from .views.party import PartyViewSet, MembershipViewSet
+from .views.crew import CrewViewSet, CrewMembershipViewSet, LunchViewSet
 
 router = routers.DefaultRouter()
-router.register(r'company', CompanyViewSet)
 router.register(r'party', PartyViewSet)
 router.register(r'vote', VoteViewSet)
-router.register(r'membership', MembershipViewSet)
+router.register(r'party_membership', MembershipViewSet)
 router.register(r'invite', InviteViewSet)
-router.register(r'contract', ContractViewSet)
 router.register(r'team', TeamViewSet)
 router.register(r'member', TeamMemberViewSet)
 router.register(r'tag', TagViewSet)
+router.register(r'crew', CrewViewSet)
+router.register(r'crew_membership', CrewMembershipViewSet)
+router.register(r'lunch', LunchViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('upload-team-image/', upload_team_image),
-    path('delete-team-image/<int:pk>/', delete_team_image),
-    path('upload-team-member-image/', upload_team_member_image),
-    path('delete-team-member-image/<int:pk>/', delete_team_member_image)
+    path('', include(router.urls))
 ]

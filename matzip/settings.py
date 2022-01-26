@@ -13,18 +13,22 @@ import os
 from datetime import timedelta
 import dj_database_url
 import django_heroku
-
+import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env = environ.Env(DEBUG=(bool, False), )
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = eval(os.environ.get('DEBUG'))
+DEBUG = eval(str(os.environ.get('DEBUG')))
 
 ALLOWED_HOSTS = ['127.0.0.1', 'our-matzip.herokuapp.com', 'localhost']
 
