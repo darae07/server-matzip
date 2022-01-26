@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import Q, F
+from django.db.models import Q, F, Prefetch
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -14,6 +14,7 @@ from group.models_team import TeamMember
 from group.serializers.crew import CrewListSerializer, CrewDetailSerializer, CrewSerializer, \
     CrewMembershipSerializer, CrewMembershipCreateSerializer, LunchSerializer, LunchListSerializer
 from matzip.handler import request_data_handler
+from stores.models import Category, Keyword
 
 
 class CrewViewSet(viewsets.ModelViewSet):
@@ -31,13 +32,16 @@ class CrewViewSet(viewsets.ModelViewSet):
         return self.get_paginated_response(serializer.data)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
-        crew = get_object_or_404(self.queryset, pk=pk)
         user = request.user
         team_member = TeamMember.objects.get_my_team_profile(user=user)
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-        serializer = CrewDetailSerializer(crew)
-        return Response(serializer.data)
+        crew = self.queryset.filter(id=pk) \
+            .prefetch_related(Prefetch('lunches', Lunch.objects.get_today_lunch_list())).first()
+        if crew:
+            serializer = CrewDetailSerializer(crew)
+            return Response(serializer.data)
+        return Response({'message': '크루를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -257,3 +261,67 @@ class CrewMembershipViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         serializer = CrewMembershipSerializer(serializer.instance)
         return Response({'message': '크루 멤버쉽을 업데이트 했습니다.', **serializer.data}, status=status.HTTP_200_OK)
+
+
+class LunchViewSet(viewsets.ModelViewSet):
+    queryset = Lunch.objects.get_today_lunch_list()
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        team_member = TeamMember.objects.get_my_team_profile(user=user)
+        if not team_member:
+            return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        data = request_data_handler(request.data, ['crew', 'keyword'], ['title', 'category'])
+        category = Category.objects.filter(id=data['category']).first()
+        keyword = Keyword.objects.hit_keyword(name=data['keyword'], team=team_member.team, category=category)
+        same_lunch = Lunch.objects.filter(crew=data['crew'], keyword=keyword).first()
+        if same_lunch:
+            return Response({'message': '이미 있는 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        data['keyword'] = keyword.id
+        serializer = LunchSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = LunchListSerializer(serializer.instance)
+        return Response({'message': '점심을 생성했습니다.', **serializer.data})
+
+    def list(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.queryset)
+        serializer = LunchListSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    def partial_update(self, request, pk=None, *args, **kwargs):
+        data = request.data
+        try:
+            lunch = Lunch.objects.get(pk=pk)
+            serializer = LunchSerializer(instance=lunch, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer = LunchListSerializer(serializer.instance)
+            return Response(data={**serializer.data, 'message': '점심이 업데이트 되었습니다.'}, status=status.HTTP_200_OK)
+        except Lunch.DoesNotExist:
+            return Response({'message': '점심을 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=True, methods=['POST'])
+    def close(self, request, pk=None):
+        try:
+            lunch = Lunch.objects.get(pk=pk)
+            if lunch.eat:
+                return Response({'message': '이미 먹은 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            lunch.keyword.eat_count += 1
+            lunch.eat = True
+            lunch.save()
+            lunch.keyword.save()
+            serializer = LunchListSerializer(lunch)
+            return Response({'message': '점심을 먹었습니다.', **serializer.data}, status=status.HTTP_200_OK)
+        except Lunch.DoesNotExist:
+            return Response({'message': '점심을 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    def destroy(self, request, pk=None, *args, **kwargs):
+        try:
+            lunch = Lunch.objects.get(pk=pk)
+            lunch.delete()
+            return Response({'message': '점심을 삭제했습니다.'}, status=status.HTTP_200_OK)
+        except Lunch.DoesNotExist:
+            return Response({'message': '점심을 찾을 수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
