@@ -25,8 +25,8 @@ class LunchSerializer(serializers.ModelSerializer):
 
 
 class LunchListSerializer(LunchSerializer):
-    keyword = KeywordSerializer(read_only=True, many=True)
-    votes = VoteSerializer(read_only=True, many=True)
+    keyword = KeywordSerializer(read_only=True, many=False)
+    votes = VoteListSerializer(read_only=True, many=True)
 
 
 class CrewMembershipSerializer(serializers.ModelSerializer):
