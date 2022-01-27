@@ -2,10 +2,10 @@ from django.urls import path
 from django.conf.urls import include
 from rest_framework import routers
 from .views_invite import InviteViewSet
-from .views_party import VoteViewSet, TagViewSet
+from .views_party import TagViewSet
 from .views.team import TeamViewSet, TeamMemberViewSet
 from .views.party import PartyViewSet, MembershipViewSet
-from .views.crew import CrewViewSet, CrewMembershipViewSet, LunchViewSet
+from .views.crew import CrewViewSet, CrewMembershipViewSet, LunchViewSet, VoteViewSet
 
 router = routers.DefaultRouter()
 router.register(r'party', PartyViewSet)
