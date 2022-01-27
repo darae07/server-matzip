@@ -19,7 +19,8 @@ class Review(models.Model):
     content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-    keyword = models.ForeignKey('stores.Keyword', on_delete=models.CASCADE, null=True, blank=True)
+    keyword = models.ForeignKey('stores.Keyword', on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='reviews')
 
     objects = ReviewManger()
 
