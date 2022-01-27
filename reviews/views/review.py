@@ -17,7 +17,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
     def review(self, request, *args, **kwargs):
-        data = request_data_handler(request.data, ['keyword', 'content'])
+        data = request_data_handler(request.data, ['keyword'], ['content'])
         user = request.user
         team_member = TeamMember.objects.get_my_team_profile(user=user)
         review = Review.objects.create(keyword=data['keyword'], content=data['content'], team_member=team_member.id)
