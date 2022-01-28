@@ -14,6 +14,7 @@ from .constants import LikeStatus
 from .managers.review import ReviewManger, ReviewImageManager
 
 
+# 맛있다로 사용
 class Review(models.Model):
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     content = models.TextField(null=True, blank=True)
