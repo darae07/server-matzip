@@ -28,6 +28,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return Response({'message': '리뷰를 작성했습니다.', **serializer.data}, status=status.HTTP_201_CREATED)
 
     def list(self, request, *args, **kwargs):
-        page = self.paginate_queryset(self.queryset.order_by('-created_at'))
+        queryset = self.queryset
+        keyword = request.query_params.get('keyword')
+        if keyword:
+            queryset = queryset.filter(keyword=keyword)
+        page = self.paginate_queryset(queryset.order_by('-created_at'))
         serializer = ReviewListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)

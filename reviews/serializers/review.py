@@ -27,4 +27,5 @@ class ReviewListSerializer(ReviewSerializer):
         return serializer.data
 
 
-
+class ReviewMemberListSerializer(ReviewSerializer):
+    team_member = TeamMemberSerializer(read_only=True, many=False)
