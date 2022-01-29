@@ -53,6 +53,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # 팀 생성후 팀 가입
+        team_member = TeamMember(team_id=serializer.instance.id, user_id=request.user.id)
+        team_member.save()
         serializer = TeamSerializer(instance=serializer.instance)
         return Response(data={**serializer.data, 'message': '회사 생성했습니다.'}, status=status.HTTP_201_CREATED)
 
