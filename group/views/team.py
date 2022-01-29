@@ -147,6 +147,8 @@ class TeamViewSet(viewsets.ModelViewSet):
             return Response({'message': '팀 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         user = request.user
         team_member = TeamMember.objects.select_team(user=user, team=pk)
+        if not team_member:
+            return Response({'message': '가입 정보가 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         serializer = TeamMemberSerializer(team_member)
         return Response({'message': '선택된 팀을 바꿨습니다.', **serializer.data}, status=status.HTTP_200_OK)
 
