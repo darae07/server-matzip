@@ -39,6 +39,10 @@ KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
 KAKAO_REDIRECT_URI = current_site.domain + '/api/common/kakao-callback/'
 KAKAO_SECRET = os.environ.get('KAKAO_SECRET')
 RESPONSE_TYPE = 'code'
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+GOOGLE_REDIRECT_URI = current_site.domain + '/api/common/google-callback/'
+GOOGLE_STATE = os.environ.get('GOOGLE_STATE')
 
 
 class CommonUserViewSet(viewsets.ModelViewSet):
@@ -350,6 +354,81 @@ def kakao_token_refresh(request):
         'refresh_token': refresh_token,
     }
     return Response({'message': '토큰 갱신 성공', **data}, status=status.HTTP_200_OK)
+
+
+@api_view(('GET',))
+@renderer_classes((JSONRenderer,))
+def google_login(request):
+    try:
+        if request.user.is_authenticated:
+            raise Exception('이미 로그인한 유저입니다.')
+        scope = 'https://www.googleapis.com/auth/userinfo.email'
+        return redirect(
+            f'https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&response_type=code&'
+            f'redirect_uri={GOOGLE_REDIRECT_URI}&scope={scope}'
+        )
+    except Exception as e:
+        print(e)
+        messages.error(request, e)
+        return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(('GET',))
+@renderer_classes((JSONRenderer,))
+def google_login_callback(request):
+    try:
+        if request.user.is_authenticated:
+            raise AlertException('이미 로그인한 유저입니다.')
+        code = request.GET.get('code', None)
+        if code is None:
+            TokenException('코드를 불러올 수 없습니다.')
+        token_request = requests.post(
+            f'https://oauth2.googleapis.com/token?client_id={GOOGLE_CLIENT_ID}&client_secret={GOOGLE_CLIENT_SECRET}'
+            f'&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_REDIRECT_URI}&state={GOOGLE_STATE}'
+        )
+        token_request_json = token_request.json()
+        error = token_request_json.get('error', None)
+        if error is not None:
+            TokenException('access token을 가져올수 없습니다.')
+        access_token = token_request_json.get('access_token')
+        email_request = requests.get(
+            f'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}'
+        )
+        email_request_status = email_request.status_code
+        if email_request_status != 200:
+            TokenException('이메일을 가져올수 없습니다.')
+        email_request_json = email_request.json()
+        email = email_request_json.get('email')
+
+        try:
+            user = CommonUser.objects.get(email=email)
+        except CommonUser.DoesNotExist:
+            user = None
+        if user is not None:
+            if user.login_method != CommonUser.LOGIN_GOOGLE:
+                AlertException(f'{user.login_method}로 로그인 해주세요')
+        else:
+            user = CommonUser(email=email, login_method=CommonUser.LOGIN_GOOGLE)
+            user.set_unusable_password()
+            user.save()
+        messages.success(request, f'{user.email} 구글 로그인 성공')
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend",)
+        data = {
+            'user': user,
+            'access_token': access_token,
+            'refresh_token': None,
+        }
+        serializer = JWTSerializer(data)
+        return Response({'message': '로그인 성공', **serializer.data}, status=status.HTTP_200_OK)
+    except AlertException as e:
+        print(e)
+        messages.error(request, e)
+        # 유저에게 알림
+        return Response({'message': str(e)}, status=status.HTTP_406_NOT_ACCEPTABLE)
+    except TokenException as e:
+        print(e)
+        # 개발 단계에서 확인
+        return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleLogin(SocialLoginView):
