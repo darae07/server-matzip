@@ -21,5 +21,6 @@ class TeamMemberManager(BaseManager.from_queryset(TeamMemberQuerySet)):
         current_team = my_memberships.filter(team=team)
         current_team.update(is_selected=True)
         other_teams = my_memberships.filter(~Q(team=team))
-        other_teams.update(is_selected=False)
+        if current_team.first():
+            other_teams.update(is_selected=False)
         return current_team.first()
