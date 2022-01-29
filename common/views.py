@@ -230,8 +230,6 @@ class LogoutView(views.LogoutView):
 @renderer_classes((JSONRenderer,))
 def kakao_login(request):
     try:
-        if request.user.is_authenticated:
-            raise Exception('이미 로그인한 유저입니다.')
         return redirect(
             f'https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_CLIENT_ID}&redirect_uri={KAKAO_REDIRECT_URI}'
             f'&response_type={RESPONSE_TYPE}'
@@ -246,8 +244,6 @@ def kakao_login(request):
 @renderer_classes((JSONRenderer,))
 def kakao_login_callback(request):
     try:
-        if request.user.is_authenticated:
-            raise AlertException('이미 로그인한 유저입니다.')
         code = request.GET.get('code', None)
         if code is None:
             TokenException('코드를 불러올 수 없습니다.')
@@ -360,8 +356,6 @@ def kakao_token_refresh(request):
 @renderer_classes((JSONRenderer,))
 def google_login(request):
     try:
-        if request.user.is_authenticated:
-            raise Exception('이미 로그인한 유저입니다.')
         scope = 'https://www.googleapis.com/auth/userinfo.email'
         return redirect(
             f'https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&response_type=code&'
@@ -377,8 +371,6 @@ def google_login(request):
 @renderer_classes((JSONRenderer,))
 def google_login_callback(request):
     try:
-        if request.user.is_authenticated:
-            raise AlertException('이미 로그인한 유저입니다.')
         code = request.GET.get('code', None)
         if code is None:
             TokenException('코드를 불러올 수 없습니다.')
