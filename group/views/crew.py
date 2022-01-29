@@ -15,6 +15,7 @@ from group.serializers.crew import CrewListSerializer, CrewDetailSerializer, Cre
     CrewMembershipSerializer, CrewMembershipCreateSerializer, LunchSerializer, LunchListSerializer, VoteSerializer, \
     VoteListSerializer
 from matzip.handler import request_data_handler
+from reviews.models import Review, ReviewImage
 from stores.models import Category, Keyword
 
 
@@ -314,6 +315,30 @@ class LunchViewSet(viewsets.ModelViewSet):
             lunch.eat = True
             lunch.save()
             lunch.keyword.save()
+            serializer = LunchListSerializer(lunch)
+            return Response({'message': '점심을 먹었습니다.', **serializer.data}, status=status.HTTP_200_OK)
+        except Lunch.DoesNotExist:
+            return Response({'message': '점심을 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    # 맛있다 누를 경우
+    @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
+    def close_with_review(self, request, pk=None, *args, **kwargs):
+        try:
+            lunch = Lunch.objects.get(pk=pk)
+            if lunch.eat:
+                return Response({'message': '이미 먹은 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            lunch.keyword.eat_count += 1
+            lunch.eat = True
+            lunch.save()
+            lunch.keyword.save()
+            data = request_data_handler(request.data, None, ['content'])
+            user = request.user
+            team_member = TeamMember.objects.get_my_team_profile(user=user)
+            review = Review.objects.create(keyword=lunch.keyword.id, content=data['content'],
+                                           team_member=team_member.id)
+            if request.FILES:
+                for image in request.FILES.getlist('image'):
+                    review_image = ReviewImage.objects.create(review=review.id, image=image)
             serializer = LunchListSerializer(lunch)
             return Response({'message': '점심을 먹었습니다.', **serializer.data}, status=status.HTTP_200_OK)
         except Lunch.DoesNotExist:
