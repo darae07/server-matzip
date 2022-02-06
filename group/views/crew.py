@@ -9,11 +9,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from group.constants import MembershipStatus
-from group.models_crew import Crew, CrewMembership, Lunch
+from group.models_crew import Crew, CrewMembership, Lunch, Vote
 from group.models_team import TeamMember
 from group.serializers.crew import CrewListSerializer, CrewDetailSerializer, CrewSerializer, \
-    CrewMembershipSerializer, CrewMembershipCreateSerializer, LunchSerializer, LunchListSerializer
+    CrewMembershipSerializer, CrewMembershipCreateSerializer, LunchSerializer, LunchListSerializer, VoteSerializer, \
+    VoteListSerializer
 from matzip.handler import request_data_handler
+from reviews.models import Review, ReviewImage
 from stores.models import Category, Keyword
 
 
@@ -276,7 +278,7 @@ class LunchViewSet(viewsets.ModelViewSet):
         data = request_data_handler(request.data, ['crew', 'keyword'], ['title', 'category'])
         category = Category.objects.filter(id=data['category']).first()
         keyword = Keyword.objects.hit_keyword(name=data['keyword'], team=team_member.team, category=category)
-        same_lunch = Lunch.objects.filter(crew=data['crew'], keyword=keyword).first()
+        same_lunch = self.queryset.filter(crew=data['crew'], keyword=keyword).first()
         if same_lunch:
             return Response({'message': '이미 있는 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         data['keyword'] = keyword.id
@@ -318,6 +320,30 @@ class LunchViewSet(viewsets.ModelViewSet):
         except Lunch.DoesNotExist:
             return Response({'message': '점심을 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+    # 맛있다 누를 경우
+    @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
+    def close_with_review(self, request, pk=None, *args, **kwargs):
+        try:
+            lunch = Lunch.objects.get(pk=pk)
+            if lunch.eat:
+                return Response({'message': '이미 먹은 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            lunch.keyword.eat_count += 1
+            lunch.eat = True
+            lunch.save()
+            lunch.keyword.save()
+            data = request_data_handler(request.data, None, ['content'])
+            user = request.user
+            team_member = TeamMember.objects.get_my_team_profile(user=user)
+            review = Review.objects.create(keyword=lunch.keyword.id, content=data['content'],
+                                           team_member=team_member.id)
+            if request.FILES:
+                for image in request.FILES.getlist('image'):
+                    review_image = ReviewImage.objects.create(review=review.id, image=image)
+            serializer = LunchListSerializer(lunch)
+            return Response({'message': '점심을 먹었습니다.', **serializer.data}, status=status.HTTP_200_OK)
+        except Lunch.DoesNotExist:
+            return Response({'message': '점심을 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
     def destroy(self, request, pk=None, *args, **kwargs):
         try:
             lunch = Lunch.objects.get(pk=pk)
@@ -325,3 +351,42 @@ class LunchViewSet(viewsets.ModelViewSet):
             return Response({'message': '점심을 삭제했습니다.'}, status=status.HTTP_200_OK)
         except Lunch.DoesNotExist:
             return Response({'message': '점심을 찾을 수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+class VoteViewSet(viewsets.ModelViewSet):
+    queryset = Vote.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.queryset)
+        serializer = VoteListSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        vote = get_object_or_404(self.queryset, pk=pk)
+        serializer = VoteListSerializer(vote)
+        return Response({'message': '투표를 불러왔습니다.', **serializer.data}, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        data = request_data_handler(request.data, ['lunch'])
+        user = request.user
+        team_member = TeamMember.objects.get_my_team_profile(user=user)
+        if not team_member:
+            return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        same_vote = Vote.objects.filter(lunch=data['lunch'], team_member=team_member).first()
+        if same_vote:
+            return Response({'message': '이미 투표했습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        data['team_member'] = team_member.id
+        serializer = VoteSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = VoteListSerializer(serializer.instance)
+        return Response({'message': '성공적으로 투표했습니다.', **serializer.data}, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, pk=None, *args, **kwargs):
+        try:
+            vote = Vote.objects.get(pk=pk)
+            vote.delete()
+            return Response({'message': '성공적으로 투표를 철회했습니다.'}, status=status.HTTP_200_OK)
+        except Vote.DoesNotExist:
+            return Response({'message': '투표 이력이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)

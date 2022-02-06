@@ -131,8 +131,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         queryset = Comment.objects.filter(parent_comment=None).order_by('-created_at')
         return queryset
 
-    def list(self, request):
-        queryset = self.queryset
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset.order_by('-created_at')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -143,7 +143,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-    def partial_update(self, request, pk, *args, **kwargs):
+    def partial_update(self, request, pk=None, *args, **kwargs):
         data = request.data
         comment = Comment.objects.get(pk=pk)
         serializer = CommentSerializer(comment, data={**data, 'user': request.user.id}, partial=True)

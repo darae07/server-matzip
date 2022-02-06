@@ -4,6 +4,7 @@ from django.utils.dateparse import parse_datetime
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 import datetime
@@ -13,6 +14,7 @@ from group.models_team import TeamMember
 from group.serializers.party import PartySerializer, PartyDetailSerializer, PartyListSerializer, \
     MembershipCreateSerializer, MembershipSerializer
 from matzip.handler import request_data_handler
+from reviews.models import Review, ReviewImage
 from stores.models import Keyword, Category
 from ..constants import MembershipStatus
 from matzip.utils.datetime_func import today_min, today_max
@@ -116,6 +118,31 @@ class PartyViewSet(viewsets.ModelViewSet):
             party.keyword.save()
             serializer = PartyDetailSerializer(party)
             return Response(data={**serializer.data, 'message': '파티가 종료되었습니다.'}, status=status.HTTP_200_OK)
+        except Party.DoesNotExist:
+            return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    # 맛있다 누른 경우
+    @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
+    def close_with_review(self, request, pk=None, *args, **kwargs):
+        try:
+            party = Party.objects.get(pk=pk)
+            if party.eat:
+                return Response({'message': '이미 종료된 파티입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            now = datetime.datetime.now()
+            party.closed_at = now
+            party.keyword.eat_count += 1
+            party.eat = True
+            party.save()
+            party.keyword.save()
+            data = request_data_handler(request.data, None, ['content'])
+            user = request.user
+            team_member = TeamMember.objects.get_my_team_profile(user=user)
+            review = Review.objects.create(keyword=party.keyword.id, content=data['content'], team_member=team_member.id)
+            if request.FILES:
+                for image in request.FILES.getlist('image'):
+                    review_image = ReviewImage.objects.create(review=review.id, image=image)
+            serializer = PartyDetailSerializer(party)
+            return Response({'message': '파티가 종료되었습니다.', **serializer.data}, status=status.HTTP_200_OK)
         except Party.DoesNotExist:
             return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 

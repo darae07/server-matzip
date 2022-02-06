@@ -11,22 +11,22 @@ from .constants import LikeStatus
 
 
 # Create your models here.
+from .managers.review import ReviewManger, ReviewImageManager
+
+
+# 맛있다로 사용
 class Review(models.Model):
-    user = models.ForeignKey(CommonUser, on_delete=models.CASCADE, null=True, blank=True)
-    store_name = models.CharField(max_length=100, default='')
+    team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)
     content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-    star = models.PositiveSmallIntegerField(default=0)
-    public = models.BooleanField(default=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
-    menu = models.CharField(max_length=100, null=True, blank=True)
-    price = models.IntegerField(default=0)
-    location = PointField(srid=4326, geography=True, blank=True, null=True)
-    address = models.CharField(max_length=300, null=True, blank=True)
+    keyword = models.ForeignKey('stores.Keyword', on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='reviews')
+
+    objects = ReviewManger()
 
     def __str__(self):
-        return self.store_name
+        return self.team_member.member_name
 
 
 def unique_path(instance, filename):
@@ -38,6 +38,8 @@ def unique_path(instance, filename):
 class ReviewImage(models.Model):
     image = models.ImageField(upload_to=unique_path, default='')
     review = models.ForeignKey(Review, related_name='images', on_delete=models.CASCADE, null=True)
+
+    objects = ReviewImageManager()
 
 
 class Comment(models.Model):

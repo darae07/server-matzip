@@ -53,6 +53,11 @@ class TeamViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # 팀 생성후 팀 가입
+        user = request.user
+        team_member = TeamMember(team_id=serializer.instance.id, user_id=user.id)
+        team_member.save()
+        if TeamMember.objects.filter(user=user.id).count() > 1:
+            my_membership = TeamMember.objects.select_team(user=user, team=serializer.instance.id)
         serializer = TeamSerializer(instance=serializer.instance)
         return Response(data={**serializer.data, 'message': '회사 생성했습니다.'}, status=status.HTTP_201_CREATED)
 
@@ -134,7 +139,18 @@ class TeamViewSet(viewsets.ModelViewSet):
         return Response(data={**serializer.data, 'message': '이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
 
     # 회사 선택: 회사 복수개 설정시 추가
-    # def select(self):
+    @action(detail=True, methods=['POST'])
+    def select(self, request, pk=None):
+        try:
+            team = Team.objects.get(pk=pk)
+        except Team.DoesNotExist:
+            return Response({'message': '팀 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        user = request.user
+        team_member = TeamMember.objects.select_team(user=user, team=pk)
+        if not team_member:
+            return Response({'message': '가입 정보가 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        serializer = TeamMemberSerializer(team_member)
+        return Response({'message': '선택된 팀을 바꿨습니다.', **serializer.data}, status=status.HTTP_200_OK)
 
 
 class TeamMemberViewSet(viewsets.ModelViewSet):
