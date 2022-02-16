@@ -3,7 +3,7 @@ import requests
 import rest_framework
 from django.contrib import messages
 from django.contrib.auth import login
-from django.core.files.base import ContentFile
+
 from django.db.models import Prefetch
 from django.shortcuts import redirect, reverse
 from django.views.decorators.csrf import csrf_exempt
@@ -13,7 +13,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from matzip.google import create_service
 from matzip.handler import request_data_handler
 from .models import CommonUser, ResetPasswordCode
 from .costume_serializers import FullUserSerializer
@@ -22,26 +21,21 @@ from group.models_team import Contract
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from django.conf import settings
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
 from dj_rest_auth import views
 from dj_rest_auth.serializers import JWTSerializer
-import base64
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from matzip.smtp import send_plain_mail, send_multipart_mail
 from .serializers import ResetPasswordCodeSerializer
 from datetime import datetime
 
-current_site = Site.objects.get_current()
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
-KAKAO_REDIRECT_URI = current_site.domain + '/api/common/kakao-callback/'
+KAKAO_REDIRECT_URI = '/api/common/kakao-callback/'
 KAKAO_SECRET = os.environ.get('KAKAO_SECRET')
 RESPONSE_TYPE = 'code'
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
-GOOGLE_REDIRECT_URI = current_site.domain + '/api/common/google-callback/'
+GOOGLE_REDIRECT_URI = '/api/common/google-callback/'
 GOOGLE_STATE = os.environ.get('GOOGLE_STATE')
 
 
@@ -230,8 +224,9 @@ class LogoutView(views.LogoutView):
 @renderer_classes((JSONRenderer,))
 def kakao_login(request):
     try:
+        domain = get_current_site(request)
         return redirect(
-            f'https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_CLIENT_ID}&redirect_uri={KAKAO_REDIRECT_URI}'
+            f'https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_CLIENT_ID}&redirect_uri={domain}{KAKAO_REDIRECT_URI}'
             f'&response_type={RESPONSE_TYPE}'
         )
     except Exception as e:
@@ -245,11 +240,12 @@ def kakao_login(request):
 def kakao_login_callback(request):
     try:
         code = request.GET.get('code', None)
+        domain = get_current_site(request)
         if code is None:
             TokenException('코드를 불러올 수 없습니다.')
         request_access_token = requests.post(
             f'https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={KAKAO_CLIENT_ID}'
-            f'&redirect_uri={KAKAO_REDIRECT_URI}&code={code}&client_secret={KAKAO_SECRET}',
+            f'&redirect_uri={domain}{KAKAO_REDIRECT_URI}&code={code}&client_secret={KAKAO_SECRET}',
             headers={'Accept': 'application/json'},
         )
         access_token_json = request_access_token.json()
@@ -357,9 +353,10 @@ def kakao_token_refresh(request):
 def google_login(request):
     try:
         scope = 'https://www.googleapis.com/auth/userinfo.email'
+        domain = get_current_site(request)
         return redirect(
             f'https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&response_type=code&'
-            f'redirect_uri={GOOGLE_REDIRECT_URI}&scope={scope}'
+            f'redirect_uri={domain}{GOOGLE_REDIRECT_URI}&scope={scope}'
         )
     except Exception as e:
         print(e)
@@ -372,11 +369,12 @@ def google_login(request):
 def google_login_callback(request):
     try:
         code = request.GET.get('code', None)
+        domain = get_current_site(request)
         if code is None:
             TokenException('코드를 불러올 수 없습니다.')
         token_request = requests.post(
             f'https://oauth2.googleapis.com/token?client_id={GOOGLE_CLIENT_ID}&client_secret={GOOGLE_CLIENT_SECRET}'
-            f'&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_REDIRECT_URI}&state={GOOGLE_STATE}'
+            f'&code={code}&grant_type=authorization_code&redirect_uri={domain}{GOOGLE_REDIRECT_URI}&state={GOOGLE_STATE}'
         )
         token_request_json = token_request.json()
         error = token_request_json.get('error', None)
