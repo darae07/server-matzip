@@ -29,13 +29,14 @@ from matzip.smtp import send_plain_mail, send_multipart_mail
 from .serializers import ResetPasswordCodeSerializer
 from datetime import datetime
 
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN')
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
-KAKAO_REDIRECT_URI = '/api/common/kakao-callback/'
+KAKAO_REDIRECT_URI = SITE_DOMAIN + '/api/common/kakao-callback/'
 KAKAO_SECRET = os.environ.get('KAKAO_SECRET')
 RESPONSE_TYPE = 'code'
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
-GOOGLE_REDIRECT_URI = '/api/common/google-callback/'
+GOOGLE_REDIRECT_URI = SITE_DOMAIN + '/api/common/google-callback/'
 GOOGLE_STATE = os.environ.get('GOOGLE_STATE')
 
 
@@ -224,9 +225,8 @@ class LogoutView(views.LogoutView):
 @renderer_classes((JSONRenderer,))
 def kakao_login(request):
     try:
-        domain = get_current_site(request)
         return redirect(
-            f'https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_CLIENT_ID}&redirect_uri={domain}{KAKAO_REDIRECT_URI}'
+            f'https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_CLIENT_ID}&redirect_uri={KAKAO_REDIRECT_URI}'
             f'&response_type={RESPONSE_TYPE}'
         )
     except Exception as e:
@@ -240,12 +240,11 @@ def kakao_login(request):
 def kakao_login_callback(request):
     try:
         code = request.GET.get('code', None)
-        domain = get_current_site(request)
         if code is None:
             TokenException('코드를 불러올 수 없습니다.')
         request_access_token = requests.post(
             f'https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={KAKAO_CLIENT_ID}'
-            f'&redirect_uri={domain}{KAKAO_REDIRECT_URI}&code={code}&client_secret={KAKAO_SECRET}',
+            f'&redirect_uri={KAKAO_REDIRECT_URI}&code={code}&client_secret={KAKAO_SECRET}',
             headers={'Accept': 'application/json'},
         )
         access_token_json = request_access_token.json()
@@ -353,10 +352,9 @@ def kakao_token_refresh(request):
 def google_login(request):
     try:
         scope = 'https://www.googleapis.com/auth/userinfo.email'
-        domain = get_current_site(request)
         return redirect(
             f'https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&response_type=code&'
-            f'redirect_uri={domain}{GOOGLE_REDIRECT_URI}&scope={scope}'
+            f'redirect_uri={GOOGLE_REDIRECT_URI}&scope={scope}'
         )
     except Exception as e:
         print(e)
@@ -369,12 +367,11 @@ def google_login(request):
 def google_login_callback(request):
     try:
         code = request.GET.get('code', None)
-        domain = get_current_site(request)
         if code is None:
             TokenException('코드를 불러올 수 없습니다.')
         token_request = requests.post(
             f'https://oauth2.googleapis.com/token?client_id={GOOGLE_CLIENT_ID}&client_secret={GOOGLE_CLIENT_SECRET}'
-            f'&code={code}&grant_type=authorization_code&redirect_uri={domain}{GOOGLE_REDIRECT_URI}&state={GOOGLE_STATE}'
+            f'&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_REDIRECT_URI}&state={GOOGLE_STATE}'
         )
         token_request_json = token_request.json()
         error = token_request_json.get('error', None)
