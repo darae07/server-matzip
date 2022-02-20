@@ -19,7 +19,7 @@ class LoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommonUser
         fields = ['id', 'email', 'last_login', 'is_superuser', 'is_staff',
-                  'date_joined', 'nickname', 'image', 'status', 'phone_number', 'team_profile']
+                  'date_joined', 'nickname', 'image', 'status', 'phone_number', 'team_profile', 'login_method']
 
 
 class UserSerializer(serializers.ModelSerializer):
