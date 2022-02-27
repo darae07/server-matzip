@@ -40,7 +40,6 @@ GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
 GOOGLE_REDIRECT_URI = SITE_DOMAIN + '/api/common/google-callback/'
 GOOGLE_STATE = os.environ.get('GOOGLE_STATE')
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = os.environ.get('SOCIAL_AUTH_LOGIN_REDIRECT_URL')
 
 
 class CommonUserViewSet(viewsets.ModelViewSet):
@@ -347,30 +346,10 @@ def google_login(request):
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def google_login_callback(request):
-    response = HttpResponseRedirect(SOCIAL_AUTH_LOGIN_REDIRECT_URL, status=303)
-    response.set_cookie('test', 'test')
-    return response
     try:
-        code = request.GET.get('code', None)
-        if code is None:
-            TokenException('코드를 불러올 수 없습니다.')
-        token_request = requests.post(
-            f'https://oauth2.googleapis.com/token?client_id={GOOGLE_CLIENT_ID}&client_secret={GOOGLE_CLIENT_SECRET}'
-            f'&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_REDIRECT_URI}&state={GOOGLE_STATE}'
-        )
-        token_request_json = token_request.json()
-        error = token_request_json.get('error', None)
-        if error is not None:
-            TokenException('access token을 가져올수 없습니다.')
-        access_token = token_request_json.get('access_token')
-        email_request = requests.get(
-            f'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}'
-        )
-        email_request_status = email_request.status_code
-        if email_request_status != 200:
-            TokenException('이메일을 가져올수 없습니다.')
-        email_request_json = email_request.json()
-        email = email_request_json.get('email')
+        access_token = request.GET.get('access_token', None)
+        nickname = request.GET.get('nickname', None)
+        email = request.GET.get('email', None)
 
         try:
             user = CommonUser.objects.get(email=email)
@@ -380,7 +359,7 @@ def google_login_callback(request):
             if user.login_method != CommonUser.LOGIN_GOOGLE:
                 AlertException(f'{user.login_method}로 로그인 해주세요')
         else:
-            user = CommonUser(email=email, login_method=CommonUser.LOGIN_GOOGLE)
+            user = CommonUser(email=email, login_method=CommonUser.LOGIN_GOOGLE, nickname=nickname)
             user.set_unusable_password()
             user.save()
         messages.success(request, f'{user.email} 구글 로그인 성공')
@@ -391,12 +370,6 @@ def google_login_callback(request):
             'refresh_token': None,
         }
         serializer = JWTSerializer(data)
-        response = HttpResponseRedirect(SOCIAL_AUTH_LOGIN_REDIRECT_URL, status=303)
-        response.set_cookie('test', 'test')
-        response.set_cookie('user', user)
-        response.set_cookie('access_token', access_token)
-        print(response.cookies)
-        return response
         return Response({'message': '로그인 성공', **serializer.data}, status=status.HTTP_200_OK)
     except AlertException as e:
         print(e)
