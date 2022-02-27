@@ -1,3 +1,4 @@
+import ast
 import os
 import requests
 import rest_framework
@@ -5,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 
 from django.db.models import Prefetch
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, reverse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
@@ -38,6 +40,7 @@ GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
 GOOGLE_REDIRECT_URI = SITE_DOMAIN + '/api/common/google-callback/'
 GOOGLE_STATE = os.environ.get('GOOGLE_STATE')
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = os.environ.get('SOCIAL_AUTH_LOGIN_REDIRECT_URL')
 
 
 class CommonUserViewSet(viewsets.ModelViewSet):
@@ -236,33 +239,12 @@ def kakao_login(request):
 
 
 @api_view(('GET',))
-@renderer_classes((JSONRenderer,))
 def kakao_login_callback(request):
     try:
-        code = request.GET.get('code', None)
-        if code is None:
-            TokenException('코드를 불러올 수 없습니다.')
-        request_access_token = requests.post(
-            f'https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={KAKAO_CLIENT_ID}'
-            f'&redirect_uri={KAKAO_REDIRECT_URI}&code={code}&client_secret={KAKAO_SECRET}',
-            headers={'Accept': 'application/json'},
-        )
-        access_token_json = request_access_token.json()
-        error = access_token_json.get('error', None)
-        if error is not None:
-            TokenException('access token을 가져올수 없습니다.')
-        access_token = access_token_json.get('access_token')
-        refresh_token = access_token_json.get('refresh_token')
-        headers = {'Authorization': f'Bearer {access_token}'}
-        profile_request = requests.post('https://kapi.kakao.com/v2/user/me',
-                                        headers=headers,
-                                        )
-        profile_json = profile_request.json()
-        kakao_account = profile_json.get('kakao_account')
-        profile = kakao_account.get('profile')
-
-        nickname = profile.get('nickname', None)
-        email = kakao_account.get('email', None)
+        access_token = request.GET.get('access_token', None)
+        refresh_token = request.GET.get('refresh_token', None)
+        nickname = request.GET.get('nickname', None)
+        email = request.GET.get('email', None)
 
         if email is None:
             AlertException('카카오계정(이메일) 제공 동의에 체크해 주세요.')
@@ -365,6 +347,9 @@ def google_login(request):
 @api_view(('GET',))
 @renderer_classes((JSONRenderer,))
 def google_login_callback(request):
+    response = HttpResponseRedirect(SOCIAL_AUTH_LOGIN_REDIRECT_URL, status=303)
+    response.set_cookie('test', 'test')
+    return response
     try:
         code = request.GET.get('code', None)
         if code is None:
@@ -406,6 +391,12 @@ def google_login_callback(request):
             'refresh_token': None,
         }
         serializer = JWTSerializer(data)
+        response = HttpResponseRedirect(SOCIAL_AUTH_LOGIN_REDIRECT_URL, status=303)
+        response.set_cookie('test', 'test')
+        response.set_cookie('user', user)
+        response.set_cookie('access_token', access_token)
+        print(response.cookies)
+        return response
         return Response({'message': '로그인 성공', **serializer.data}, status=status.HTTP_200_OK)
     except AlertException as e:
         print(e)
