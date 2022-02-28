@@ -50,6 +50,7 @@ class ResponseFormattingMiddleware:
                 finally:
                     if is_client_error(response.status_code):
                         response_format['result'] = None
+                        response_format['message'] = data
                     else:
                         response_format['result'] = data
                     response.data = response_format
