@@ -57,9 +57,13 @@ class TeamViewSet(viewsets.ModelViewSet):
         team_member = TeamMember(team_id=serializer.instance.id, user_id=user.id)
         team_member.save()
         if TeamMember.objects.filter(user=user.id).count() > 1:
-            my_membership = TeamMember.objects.select_team(user=user, team=serializer.instance.id)
+            TeamMember.objects.select_team(user=user, team=serializer.instance.id)
+
         serializer = TeamSerializer(instance=serializer.instance)
-        return Response(data={**serializer.data, 'message': '회사 생성했습니다.'}, status=status.HTTP_201_CREATED)
+        team_profile_serializer = TeamMemberSerializer(instance=team_member)
+        return Response(data={**serializer.data,
+                              'team_profile': team_profile_serializer.data, 'message': '회사 생성했습니다.'},
+                        status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk, *args, **kwargs):
         data = request.data
