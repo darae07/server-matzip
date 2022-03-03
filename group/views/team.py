@@ -62,7 +62,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         serializer = TeamSerializer(instance=serializer.instance)
         team_profile_serializer = TeamMemberSerializer(instance=team_member)
         return Response(data={**serializer.data,
-                              'team_profile': team_profile_serializer.data, 'message': '회사 생성했습니다.'},
+                              'team_profile': team_profile_serializer.data, 'message': '회사를 등록했습니다.'},
                         status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk, *args, **kwargs):
