@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from group.constants import InviteStatus
 from group.models_party import Membership, Party
 from group.models_team import Team, TeamMember, Invite
-from group.serializers.team import TeamSerializer, TeamListSerializer, TeamFindSerializer
+from group.serializers.team import TeamSerializer, TeamListSerializer, TeamFindSerializer, TeamDetailSerializer
 from group.serializers.team_member import PartyTeamMemberSerializer, TeamMemberSerializer, TeamMemberCreateSerializer
 from matzip.handler import request_data_handler
 
@@ -31,8 +31,8 @@ class TeamViewSet(viewsets.ModelViewSet):
             has_membership = TeamMember.objects.filter(team=pk, user=user.id)
             if not has_membership:
                 return Response({'message': '권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-            serializer = TeamSerializer(team)
-            return Response({'message': '회사 정보를 불러왔습니다.', **serializer.data}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            serializer = TeamDetailSerializer(team)
+            return Response({'message': '회사 정보를 불러왔습니다.', **serializer.data}, status=status.HTTP_200_OK)
         except Team.DoesNotExist:
             return Response({'message': '회사를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 

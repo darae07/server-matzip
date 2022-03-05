@@ -32,7 +32,6 @@ class TeamListSerializer(serializers.ModelSerializer):
 
 
 class TeamDetailSerializer(serializers.ModelSerializer):
-    party = PartyListSerializer(read_only=True, many=True)
 
     class Meta:
         model = Team
