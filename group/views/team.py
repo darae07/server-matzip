@@ -187,6 +187,7 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
             my_memberships.update(is_selected=False)
             team_member = TeamMember.objects.create(**serializer.validated_data)
             team_member.save()
+            TeamMember.objects.select_team(user=user, team=serializer.instance.id)
             serializer = TeamMemberSerializer(instance=team_member)
             return Response({**serializer.data, 'message': '회사에 가입되었습니다.'}, status=status.HTTP_201_CREATED)
         else:
