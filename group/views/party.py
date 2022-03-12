@@ -47,7 +47,7 @@ class PartyViewSet(viewsets.ModelViewSet):
         return self.serializer_class['list']
 
     def list(self, request, *args, **kwargs):
-        queryset = self.queryset.order_by('id')
+        queryset = self.queryset
         user = request.user
         team_member = TeamMember.objects.get_my_team_profile(user=user)
 
@@ -57,6 +57,17 @@ class PartyViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+    @action(detail=False, methods=['GET'])
+    def my_party(self, request, *args, **kwargs):
+        queryset = self.queryset
+        user = request.user
+        team_member = TeamMember.objects.get_my_team_profile(user=user)
+        if not team_member:
+            return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        queryset = queryset.prefetch_related('membership').filter(membership__team_member=team_member)
+        serializer = PartyListSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         party = get_object_or_404(self.queryset, pk=pk)
