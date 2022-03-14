@@ -47,7 +47,7 @@ class PartyViewSet(viewsets.ModelViewSet):
         return self.serializer_class['list']
 
     def list(self, request, *args, **kwargs):
-        queryset = self.queryset
+        queryset = self.queryset.order_by(F('closed_at').desc(nulls_first=True), '-created_at')
         user = request.user
         team_member = TeamMember.objects.get_my_team_profile(user=user)
 
