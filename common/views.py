@@ -30,6 +30,7 @@ from dj_rest_auth.serializers import JWTSerializer
 from matzip.smtp import send_plain_mail, send_multipart_mail
 from .serializers import ResetPasswordCodeSerializer
 from datetime import datetime
+from rest_framework_simplejwt.tokens import RefreshToken
 
 SITE_DOMAIN = os.environ.get('SITE_DOMAIN')
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
@@ -240,8 +241,6 @@ def kakao_login(request):
 @api_view(('GET',))
 def kakao_login_callback(request):
     try:
-        access_token = request.GET.get('access_token', None)
-        refresh_token = request.GET.get('refresh_token', None)
         nickname = request.GET.get('nickname', None)
         email = request.GET.get('email', None)
 
@@ -266,10 +265,12 @@ def kakao_login_callback(request):
             user.save()
         messages.success(request, f'{user.email} 카카오 로그인 성공')
         login(request, user, backend="django.contrib.auth.backends.ModelBackend", )
+
+        token = RefreshToken.for_user(user)
         data = {
             'user': user,
-            'access_token': access_token,
-            'refresh_token': refresh_token,
+            'access_token': str(token.access_token),
+            'refresh_token': str(token),
         }
         serializer = JWTSerializer(data)
         return Response({'message': '로그인 성공', **serializer.data}, status=status.HTTP_200_OK)
@@ -347,7 +348,6 @@ def google_login(request):
 @renderer_classes((JSONRenderer,))
 def google_login_callback(request):
     try:
-        access_token = request.GET.get('access_token', None)
         nickname = request.GET.get('nickname', None)
         email = request.GET.get('email', None)
 
@@ -364,10 +364,12 @@ def google_login_callback(request):
             user.save()
         messages.success(request, f'{user.email} 구글 로그인 성공')
         login(request, user, backend="django.contrib.auth.backends.ModelBackend",)
+
+        token = RefreshToken.for_user(user)
         data = {
             'user': user,
-            'access_token': access_token,
-            'refresh_token': None,
+            'access_token': str(token.access_token),
+            'refresh_token': str(token),
         }
         serializer = JWTSerializer(data)
         return Response({'message': '로그인 성공', **serializer.data}, status=status.HTTP_200_OK)
