@@ -241,9 +241,17 @@ def kakao_login(request):
 @api_view(('GET',))
 def kakao_login_callback(request):
     try:
-        nickname = request.GET.get('nickname', None)
-        email = request.GET.get('email', None)
+        access_token = request.META.get('HTTP_AUTHORIZATION')
+        headers = {'Authorization': f'Bearer {access_token}'}
+        profile_request = requests.post('https://kapi.kakao.com/v2/user/me',
+                                        headers=headers,
+                                        )
+        profile_json = profile_request.json()
+        kakao_account = profile_json.get('kakao_account')
+        profile = kakao_account.get('profile')
 
+        nickname = profile.get('nickname', None)
+        email = kakao_account.get('email', None)
         if email is None:
             AlertException('카카오계정(이메일) 제공 동의에 체크해 주세요.')
 
@@ -348,9 +356,12 @@ def google_login(request):
 @renderer_classes((JSONRenderer,))
 def google_login_callback(request):
     try:
-        nickname = request.GET.get('nickname', None)
-        email = request.GET.get('email', None)
+        token_id = request.META.get('HTTP_AUTHORIZATION')
+        profile_request = requests.get(f'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={token_id}')
+        profile_json = profile_request.json()
 
+        nickname = profile_json.get('name', None)
+        email = profile_json.get('email', None)
         try:
             user = CommonUser.objects.get(email=email)
         except CommonUser.DoesNotExist:
