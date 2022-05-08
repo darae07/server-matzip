@@ -21,8 +21,7 @@ from matzip.utils.datetime_func import today_min, today_max
 
 
 class PartyViewSet(viewsets.ModelViewSet):
-    queryset = Party.objects.get_today_party_list()
-    # queryset = Party.objects.all()
+    queryset = Party.objects.all()
     serializer_class = {
         'create': PartySerializer,
         'list': PartyListSerializer,
@@ -31,8 +30,8 @@ class PartyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Party.objects.get_today_party_list().order_by(F('closed_at').desc(nulls_first=True), '-created_at')
-        return queryset
+        queryset = super(PartyViewSet, self).get_queryset()
+        return queryset.objects.get_today_party_list().order_by(F('closed_at').desc(nulls_first=True), '-created_at')
 
     def get_serializer_context(self):
         context = super(PartyViewSet, self).get_serializer_context()
