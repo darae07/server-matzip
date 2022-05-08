@@ -4,9 +4,6 @@ from common.models import CommonUser
 from stores.models import Category
 import uuid
 import os
-from django.contrib.gis.db.models import PointField
-from cloudinary.models import CloudinaryField
-from PIL import Image
 from .constants import LikeStatus
 
 
