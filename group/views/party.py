@@ -31,7 +31,7 @@ class PartyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = self.queryset.order_by(F('closed_at').desc(nulls_first=True), '-created_at')
+        queryset = Party.objects.get_today_party_list().order_by(F('closed_at').desc(nulls_first=True), '-created_at')
         return queryset
 
     def get_serializer_context(self):
