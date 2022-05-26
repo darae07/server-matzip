@@ -64,7 +64,6 @@ INSTALLED_APPS = [
 
     # provider
     'allauth.socialaccount.providers.google',
-    'django.contrib.gis',
     'corsheaders',
 ]
 SITE_ID = 1
@@ -107,7 +106,7 @@ WSGI_APPLICATION = 'matzip.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DJANGO_DB_NAME'),
         'USER': os.environ.get('DJANGO_DB_USERNAME'),
         'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD'),
