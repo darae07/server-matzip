@@ -1,6 +1,4 @@
-import datetime
-import time
-from django.utils import timezone
+from datetime import datetime, time, timedelta
 from dateutil.relativedelta import relativedelta
 
 
@@ -13,6 +11,6 @@ def get_after_minutes(minutes, date=None):
     return result
 
 
-today_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
-today_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
-today = datetime.date.today()
+today = datetime.now().date()
+today_min = datetime.combine(today, time())
+today_max = datetime.combine((today + timedelta(1)), time())
