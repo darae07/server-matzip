@@ -53,6 +53,10 @@ class PartyViewSet(viewsets.ModelViewSet):
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         queryset = queryset.filter(team=team_member.team).prefetch_related('membership')
+
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(keyword__category=category)
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
