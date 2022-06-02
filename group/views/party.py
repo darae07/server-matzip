@@ -145,6 +145,7 @@ class PartyViewSet(viewsets.ModelViewSet):
             now = datetime.datetime.now()
             party.closed_at = now
             party.keyword.eat_count += 1
+            party.keyword.good_count += 1
             party.eat = True
             party.save()
             party.keyword.save()
