@@ -47,6 +47,7 @@ class Keyword(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     hit_count = models.IntegerField(default=0)
     eat_count = models.IntegerField(default=0)
+    good_count = models.IntegerField(default=0)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
 
     objects = KeywordManager()
