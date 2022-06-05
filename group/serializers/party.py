@@ -5,6 +5,8 @@ from common.costume_serializers import FullUserSerializer
 from group.constants import MembershipStatus
 from group.models_party import Party, Membership
 from group.serializers.team_member import TeamMemberSerializer
+from reviews.models import Review
+from reviews.serializers.review import ReviewListSerializer
 from stores.serializers.keword import KeywordSerializer
 
 
@@ -42,6 +44,12 @@ class PartyListSerializer(serializers.ModelSerializer):
 
 
 class PartyDetailSerializer(PartyListSerializer):
+    reviews = serializers.SerializerMethodField('get_reviews')
+
+    def get_reviews(self, instance):
+        queryset = Review.objects.filter(keyword=instance.keyword).order_by('-created_at')[:5]
+        serializer = ReviewListSerializer(queryset, read_only=True, many=True)
+        return serializer.data
 
     class Meta:
         model = Party
