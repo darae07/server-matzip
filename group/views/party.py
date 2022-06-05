@@ -123,7 +123,7 @@ class PartyViewSet(viewsets.ModelViewSet):
         try:
             party = Party.objects.get(pk=pk)
             if party.eat:
-                return Response({'message': '이미 종료된 파티입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'message': '이미 식사한 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
             now = datetime.datetime.now()
             party.closed_at = now
             party.keyword.eat_count += 1
@@ -131,9 +131,9 @@ class PartyViewSet(viewsets.ModelViewSet):
             party.save()
             party.keyword.save()
             serializer = PartyDetailSerializer(party)
-            return Response(data={**serializer.data, 'message': '파티가 종료되었습니다.'}, status=status.HTTP_200_OK)
+            return Response(data={**serializer.data, 'message': '식사 완료 기록을 생성했습니다.'}, status=status.HTTP_200_OK)
         except Party.DoesNotExist:
-            return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response({'message': '오늘의 메뉴를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
     # 맛있다 누른 경우
     @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
@@ -141,7 +141,7 @@ class PartyViewSet(viewsets.ModelViewSet):
         try:
             party = Party.objects.get(pk=pk)
             if party.eat:
-                return Response({'message': '이미 종료된 파티입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'message': '이미 식사한 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
             now = datetime.datetime.now()
             party.closed_at = now
             party.keyword.eat_count += 1
@@ -157,9 +157,9 @@ class PartyViewSet(viewsets.ModelViewSet):
                 for image in request.FILES.getlist('image'):
                     review_image = ReviewImage.objects.create(review=review.id, image=image)
             serializer = PartyDetailSerializer(party)
-            return Response({'message': '파티가 종료되었습니다.', **serializer.data}, status=status.HTTP_200_OK)
+            return Response({'message': '식사 리뷰를 등록했습니다.', **serializer.data}, status=status.HTTP_200_OK)
         except Party.DoesNotExist:
-            return Response({'message': '파티를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response({'message': '오늘의 메뉴를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
     def destroy(self, request, pk=None, *args, **kwargs):
         try:
