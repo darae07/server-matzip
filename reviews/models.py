@@ -35,7 +35,9 @@ def unique_path(instance, filename):
 class ReviewImage(models.Model):
     image = models.ImageField(upload_to=unique_path, default='')
     review = models.ForeignKey(Review, related_name='images', on_delete=models.CASCADE, null=True)
-
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    keyword = models.ForeignKey('stores.Keyword', on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='review_image')
     objects = ReviewImageManager()
 
 
