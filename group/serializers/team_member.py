@@ -10,6 +10,13 @@ class TeamMemberSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TeamMemberCompactSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TeamMember
+        fields = ['id', 'image', 'member_name']
+
+
 class PartyTeamMemberSerializer(serializers.ModelSerializer):
     is_invited_waiting = serializers.BooleanField(read_only=True)
     is_party_member = serializers.BooleanField(read_only=True)

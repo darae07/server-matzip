@@ -4,7 +4,7 @@ from rest_framework import serializers
 from common.costume_serializers import FullUserSerializer
 from group.constants import MembershipStatus
 from group.models_party import Party, Membership
-from group.serializers.team_member import TeamMemberSerializer
+from group.serializers.team_member import TeamMemberSerializer, TeamMemberCompactSerializer
 from reviews.models import Review
 from reviews.serializers.review import ReviewListSerializer
 from stores.serializers.keword import KeywordSerializer
@@ -28,6 +28,14 @@ class MembershipCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class MembershipCompactSerializer(serializers.ModelSerializer):
+    team_member = TeamMemberCompactSerializer(read_only=True, many=False)
+
+    class Meta:
+        model = Membership
+        fields = ['id', 'team_member']
+
+
 class PartyListSerializer(serializers.ModelSerializer):
     membership = serializers.SerializerMethodField('get_membership')
     keyword = KeywordSerializer(read_only=True, many=False)
@@ -35,7 +43,7 @@ class PartyListSerializer(serializers.ModelSerializer):
     def get_membership(self, instance):
         queryset = instance.membership.filter(~Q(status=MembershipStatus.DENIED.value))\
             .order_by('status', '-created_at')
-        serializer = MembershipSerializer(queryset, many=True, read_only=True)
+        serializer = MembershipCompactSerializer(queryset, many=True, read_only=True)
         return serializer.data
 
     class Meta:
