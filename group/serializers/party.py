@@ -48,6 +48,8 @@ class PartyListSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_image(self, instance):
+        if not instance.keyword:
+            return None
         image = ReviewImage.objects.filter(keyword=instance.keyword.id).order_by('-created_at').first()
         if image:
             serializer = ReviewImageSerializer(image, many=False)
