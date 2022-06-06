@@ -5,8 +5,8 @@ from common.costume_serializers import FullUserSerializer
 from group.constants import MembershipStatus
 from group.models_party import Party, Membership
 from group.serializers.team_member import TeamMemberSerializer, TeamMemberCompactSerializer
-from reviews.models import Review
-from reviews.serializers.review import ReviewListSerializer
+from reviews.models import Review, ReviewImage
+from reviews.serializers.review import ReviewListSerializer, ReviewImageSerializer
 from stores.serializers.keword import KeywordSerializer
 
 
@@ -39,12 +39,20 @@ class MembershipCompactSerializer(serializers.ModelSerializer):
 class PartyListSerializer(serializers.ModelSerializer):
     membership = serializers.SerializerMethodField('get_membership')
     keyword = KeywordSerializer(read_only=True, many=False)
+    image = serializers.SerializerMethodField('get_image')
 
     def get_membership(self, instance):
         queryset = instance.membership.filter(~Q(status=MembershipStatus.DENIED.value))\
             .order_by('status', '-created_at')
         serializer = MembershipCompactSerializer(queryset, many=True, read_only=True)
         return serializer.data
+
+    def get_image(self, instance):
+        image = ReviewImage.objects.filter(keyword=instance.keyword.id).order_by('-created_at').first()
+        if image:
+            serializer = ReviewImageSerializer(image, many=False)
+            return serializer.data
+        return None
 
     class Meta:
         model = Party
