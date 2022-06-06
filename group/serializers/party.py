@@ -71,7 +71,7 @@ class PartyDetailSerializer(PartyListSerializer):
 
     class Meta:
         model = Party
-        fields = '__all__'
+        fields = ['id', 'membership', 'keyword', 'reviews', 'name', 'description', 'created_at', 'closed_at', 'eat', 'team']
 
 
 class PartySerializer(serializers.ModelSerializer):
