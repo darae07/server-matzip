@@ -155,7 +155,7 @@ class PartyViewSet(viewsets.ModelViewSet):
             review = Review.objects.create(keyword=party.keyword.id, content=data['content'], team_member=team_member.id)
             if request.FILES:
                 for image in request.FILES.getlist('image'):
-                    review_image = ReviewImage.objects.create(review=review.id, image=image)
+                    review_image = ReviewImage.objects.create(review=review.id, image=image, keyword=party.keyword.id)
             serializer = PartyDetailSerializer(party)
             return Response({'message': '식사 리뷰를 등록했습니다.', **serializer.data}, status=status.HTTP_200_OK)
         except Party.DoesNotExist:
