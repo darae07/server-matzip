@@ -1,6 +1,7 @@
 from django.db.models import Prefetch, Exists, OuterRef
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -9,7 +10,8 @@ from group.constants import InviteStatus
 from group.models_party import Membership, Party
 from group.models_team import Team, TeamMember, Invite
 from group.serializers.team import TeamSerializer, TeamListSerializer, TeamFindSerializer, TeamDetailSerializer
-from group.serializers.team_member import PartyTeamMemberSerializer, TeamMemberSerializer, TeamMemberCreateSerializer
+from group.serializers.team_member import PartyTeamMemberSerializer, TeamMemberSerializer, TeamMemberCreateSerializer, \
+    TeamMemberDetailSerializer
 from matzip.handler import request_data_handler
 
 
@@ -161,6 +163,11 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
     queryset = TeamMember.objects.all()
     serializer_class = TeamMemberSerializer
     permission_classes = [IsAuthenticated]
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        team_member = get_object_or_404(self.queryset, pk=pk)
+        serializer = TeamMemberDetailSerializer(team_member)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         data = request_data_handler(request.data, ['member_name', 'team'])
