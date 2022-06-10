@@ -42,9 +42,9 @@ class PartyListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField('get_image')
 
     def get_membership(self, instance):
-        queryset = instance.membership.filter(~Q(status=MembershipStatus.DENIED.value))\
-            .order_by('status', '-created_at')
-        serializer = MembershipSerializer(queryset, many=True, read_only=True)
+        queryset = instance.membership.filter(status=MembershipStatus.ALLOWED.value)\
+            .order_by('status', 'created_at')
+        serializer = MembershipCompactSerializer(queryset, many=True, read_only=True)
         return serializer.data
 
     def get_image(self, instance):
@@ -63,10 +63,17 @@ class PartyListSerializer(serializers.ModelSerializer):
 
 class PartyDetailSerializer(PartyListSerializer):
     reviews = serializers.SerializerMethodField('get_reviews')
+    membership = serializers.SerializerMethodField('get_membership')
 
     def get_reviews(self, instance):
         queryset = Review.objects.filter(keyword=instance.keyword).order_by('-created_at')[:5]
         serializer = ReviewListSerializer(queryset, read_only=True, many=True)
+        return serializer.data
+
+    def get_membership(self, instance):
+        queryset = instance.membership.filter(~Q(status=MembershipStatus.DENIED.value)) \
+            .order_by('status', 'created_at')
+        serializer = MembershipSerializer(queryset, many=True, read_only=True)
         return serializer.data
 
     class Meta:
