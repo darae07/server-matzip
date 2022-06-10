@@ -44,7 +44,7 @@ class PartyListSerializer(serializers.ModelSerializer):
     def get_membership(self, instance):
         queryset = instance.membership.filter(~Q(status=MembershipStatus.DENIED.value))\
             .order_by('status', '-created_at')
-        serializer = MembershipCompactSerializer(queryset, many=True, read_only=True)
+        serializer = MembershipSerializer(queryset, many=True, read_only=True)
         return serializer.data
 
     def get_image(self, instance):
