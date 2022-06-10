@@ -13,6 +13,7 @@ from group.serializers.team import TeamSerializer, TeamListSerializer, TeamFindS
 from group.serializers.team_member import PartyTeamMemberSerializer, TeamMemberSerializer, TeamMemberCreateSerializer, \
     TeamMemberDetailSerializer
 from matzip.handler import request_data_handler
+from matzip.pagination import Pagination
 
 
 class TeamViewSet(viewsets.ModelViewSet):
@@ -163,6 +164,8 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
     queryset = TeamMember.objects.all()
     serializer_class = TeamMemberSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = Pagination
+    pagination_class.page_size = 15
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         team_member = get_object_or_404(self.queryset, pk=pk)
@@ -243,3 +246,23 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
         team_member.save()
         serializer = TeamMemberSerializer(instance=team_member)
         return Response(data={**serializer.data, 'message': '이미지를 삭제했습니다.'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def search(self, request, *args, **kwargs):
+        user = request.user
+        team_member = TeamMember.objects.get_my_team_profile(user=user)
+
+        if not team_member:
+            return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        member_name_value = self.request.query_params.get('member_name')
+        queryset = self.queryset.filter(team=team_member.team).order_by('-date_joined')
+        if member_name_value:
+            queryset = queryset.filter(member_name__contains=member_name_value)
+
+        party = self.request.query_params.get('party')
+        if party:
+            party_membership_id_list = [m.team_member.id for m in Membership.objects.filter(party=party)]
+            queryset = queryset.exclude(id__in=party_membership_id_list)
+        page = self.paginate_queryset(queryset)
+        serializer = self.serializer_class(page, many=True)
+        return self.get_paginated_response(serializer.data)
