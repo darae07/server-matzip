@@ -1,5 +1,5 @@
 from django.db import models
-from stores.models import Store
+from stores.models import Store, Keyword
 from common.models import CommonUser
 from stores.models import Category
 import uuid
@@ -36,7 +36,7 @@ class ReviewImage(models.Model):
     image = models.ImageField(upload_to=unique_path, default='')
     review = models.ForeignKey(Review, related_name='images', on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    keyword = models.ForeignKey('stores.Keyword', on_delete=models.CASCADE, null=True, blank=True,
+    keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE, null=True, blank=True,
                                 related_name='review_image')
     objects = ReviewImageManager()
 
