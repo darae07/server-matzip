@@ -8,7 +8,7 @@ class Party(models.Model):
     name = models.CharField(max_length=100)
     team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True, related_name='party')
     description = models.CharField(max_length=500, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True, db_index=True)
     closed_at = models.DateTimeField(null=True, blank=True)
     eat = models.BooleanField(default=False)
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE, null=True, blank=True)
