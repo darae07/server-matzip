@@ -225,19 +225,20 @@ class TeamMemberViewSet(viewsets.ModelViewSet):
         except TeamMember.DoesNotExist:
             return Response({'message': '가입 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    @action(detail=True, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
-    def upload_image(self, request, pk=None):
+    @action(detail=False, methods=['POST'], parser_classes=[MultiPartParser, FormParser])
+    def upload_image(self, request):
+        user = request.user
         if request.FILES:
             request.data.image = request.FILES
         try:
-            team_member = TeamMember.objects.get(pk=pk)
+            team_member = TeamMember.objects.get_my_team_profile(user=user)
         except TeamMember.DoesNotExist:
             return Response({'message': '가입 정보를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         serializer = TeamMemberSerializer(team_member, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
         serializer = TeamMemberSerializer(instance=serializer.instance)
-        return Response(data={**serializer.data, 'message': '이미지를 등록했습니다.'}, status=status.HTTP_200_OK)
+        return Response(data={**serializer.data, 'message': '내 정보를 업데이트 했습니다.'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
     def delete_image(self, request, pk=None):
