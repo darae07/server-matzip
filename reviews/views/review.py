@@ -35,3 +35,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset.order_by('-created_at'))
         serializer = ReviewListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def my_review(self, request):
+        user = request.user
+        team_member = TeamMember.objects.get_my_team_profile(user=user)
+        queryset = self.get_queryset().filter(team_member=team_member).order_by('-created_at')
+        page = self.paginate_queryset(queryset)
+        serializer = ReviewListSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
