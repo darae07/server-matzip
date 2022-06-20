@@ -18,6 +18,7 @@ from reviews.models import Review, ReviewImage
 from stores.models import Keyword, Category
 from ..constants import MembershipStatus
 from matzip.utils.datetime_func import today_min, today_max
+from matzip.pagination import Pagination
 
 
 class PartyViewSet(viewsets.ModelViewSet):
@@ -28,6 +29,8 @@ class PartyViewSet(viewsets.ModelViewSet):
         'retrieve': PartyDetailSerializer
     }
     permission_classes = [IsAuthenticated]
+    pagination_class = Pagination
+    pagination_class.page_size = 6
 
     def get_queryset(self):
         queryset = super(PartyViewSet, self).get_queryset()
