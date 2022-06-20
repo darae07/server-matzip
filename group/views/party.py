@@ -145,24 +145,27 @@ class PartyViewSet(viewsets.ModelViewSet):
             party = Party.objects.get(pk=pk)
             if party.eat:
                 return Response({'message': '이미 식사한 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-            now = datetime.datetime.now()
-            party.closed_at = now
-            party.keyword.eat_count += 1
-            party.keyword.good_count += 1
-            party.eat = True
-            party.save()
-            party.keyword.save()
-            data = request_data_handler(request.data, None, ['content'])
+
+            data = request_data_handler(request.data, None, ['content', 'score'])
             user = request.user
             team_member = TeamMember.objects.get_my_team_profile(user=user)
-            review = Review.objects.create(keyword=party.keyword.id, content=data['content'], team_member=team_member.id)
+            review = Review.objects.create(keyword=party.keyword.id, content=data['content'], score=data['score'],
+                                           team_member=team_member.id)
             if request.FILES:
                 for image in request.FILES.getlist('image'):
                     review_image = ReviewImage.objects.create(review=review.id, image=image)
                     review_image.keyword = party.keyword
                     review_image.save()
+                    if not review_image:
+                        return Response({'message': '식사 리뷰를 등록할 수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
             serializer = PartyDetailSerializer(party)
+            now = datetime.datetime.now()
+            party.closed_at = now
+            party.keyword.eat_count += 1
+            party.eat = True
+            party.save()
+            party.keyword.save()
             return Response({'message': '식사 리뷰를 등록했습니다.', **serializer.data}, status=status.HTTP_200_OK)
         except Party.DoesNotExist:
             return Response({'message': '오늘의 메뉴를 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
