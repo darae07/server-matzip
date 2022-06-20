@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from group.serializers.team_member import TeamMemberSerializer
 from reviews.models import Review, ReviewImage
+from stores.serializers.keword import KeywordSerializer
 
 
 class ReviewImageSerializer(serializers.ModelSerializer):
@@ -23,8 +24,14 @@ class ReviewListSerializer(ReviewSerializer):
 
     def get_images(self, instance):
         queryset = instance.images.all()
+        if not queryset.count():
+            return None
         serializer = ReviewImageSerializer(queryset, many=True)
         return serializer.data
+
+
+class MyReviewListSerializer(ReviewListSerializer):
+    keyword = KeywordSerializer(read_only=True, many=False)
 
 
 class ReviewMemberListSerializer(ReviewSerializer):

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from group.models_team import TeamMember
 from matzip.handler import request_data_handler
 from reviews.models import Review, ReviewImage
-from reviews.serializers.review import ReviewListSerializer
+from reviews.serializers.review import ReviewListSerializer, MyReviewListSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -42,5 +42,5 @@ class ReviewViewSet(viewsets.ModelViewSet):
         team_member = TeamMember.objects.get_my_team_profile(user=user)
         queryset = self.get_queryset().filter(team_member=team_member).order_by('-created_at')
         page = self.paginate_queryset(queryset)
-        serializer = ReviewListSerializer(page, many=True)
+        serializer = MyReviewListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
