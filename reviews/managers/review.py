@@ -7,12 +7,12 @@ class ReviewQuerySet(models.QuerySet):
 
 
 class ReviewManger(BaseManager.from_queryset(ReviewQuerySet)):
-    def create(self, keyword, content, team_member):
+    def create(self, keyword, content, score, team_member):
         if not keyword:
             raise ValueError('필수 파라미터 keyword 가 누락되었습니다.')
         if not team_member:
             raise ValueError('필수 파라미터 team_member 가 누락되었습니다.')
-        review = self.model(keyword_id=keyword, content=content, team_member_id=team_member)
+        review = self.model(keyword_id=keyword, content=content, score=score, team_member_id=team_member)
         review.save()
         return review
 
