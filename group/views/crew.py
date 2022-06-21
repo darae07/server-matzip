@@ -17,11 +17,14 @@ from group.serializers.crew import CrewListSerializer, CrewDetailSerializer, Cre
 from matzip.handler import request_data_handler
 from reviews.models import Review, ReviewImage
 from stores.models import Category, Keyword
+from matzip.pagination import Pagination
 
 
 class CrewViewSet(viewsets.ModelViewSet):
     queryset = Crew.objects.all()
     permission_classes = [IsAuthenticated]
+    pagination_class = Pagination
+    pagination_class.page_size = 6
 
     def list(self, request, *args, **kwargs):
         user = request.user
@@ -106,7 +109,7 @@ class CrewViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(**serializer.validated_data)
         serializer = CrewSerializer(instance=serializer.instance)
-        return Response({'message': '크루 이미지를 등록했습니다.', **serializer.data}, status=status.HTTP_200_OK)
+        return Response({'message': '크루 정보를 저장했습니다.', **serializer.data}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
     def delete_image(self, request, pk=None):
