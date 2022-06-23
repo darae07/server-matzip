@@ -85,7 +85,7 @@ class CrewViewSet(viewsets.ModelViewSet):
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         my_crew_membership_list = CrewMembership.objects.filter(team_member=team_member).values('crew')
-        queryset = self.queryset.filter(team=team_member.team.id, id__in=my_crew_membership_list).order_by('created_at')
+        queryset = self.queryset.filter(team=team_member.team.id, id__in=my_crew_membership_list).order_by('-created_at')
         page = self.paginate_queryset(queryset)
         serializer = CrewDetailSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
