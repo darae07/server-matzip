@@ -237,6 +237,22 @@ class CrewMembershipViewSet(viewsets.ModelViewSet):
         except CrewMembership.DoesNotExist:
             return Response({'message': '존재하지 않는 초대입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+    @action(detail=True, methods=['POST'])
+    def cancel(self, request, pk, *args, **kwargs):
+        user = request.user
+        try:
+            membership = CrewMembership.objects.get(id=pk)
+            if membership.invite_member.user.id != user.id:
+                return Response({'message': '권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            if membership.status == MembershipStatus.ALLOWED.value:
+                return Response({'message': '이미 가입되었습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            if membership.status == MembershipStatus.WAITING.value:
+                membership.delete()
+                return Response(data={'message': '파티 초대를 취소했습니다.'}, status=status.HTTP_200_OK)
+            return Response({'message': '초대를 취소하지 못했습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        except CrewMembership.DoesNotExist:
+            return Response({'message': '존재하지 않는 초대입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
     @action(detail=False, methods=['GET'])
     def my_invite_list(self, request):
         user = request.user
