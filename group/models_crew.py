@@ -18,7 +18,7 @@ class Vote(models.Model):
 class Lunch(models.Model):
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE)
     title = models.CharField(default=None, max_length=300)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True, db_index=True)
     eat = models.BooleanField(default=False)
     crew = models.ForeignKey('group.Crew', on_delete=models.CASCADE, null=True, blank=True, related_name='lunches')
 
