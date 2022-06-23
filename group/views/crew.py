@@ -216,6 +216,7 @@ class CrewMembershipViewSet(viewsets.ModelViewSet):
                 membership.save()
                 serializer = CrewMembershipSerializer(membership)
                 return Response({'message': '크루에 가입했습니다.', **serializer.data}, status=status.HTTP_200_OK)
+            return Response({'message': '크루에 가입할 수 없습니다.'}, status=status.HTTP_200_OK)
         except CrewMembership.DoesNotExist:
             return Response({'message': '존재하지 않는 초대입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -268,7 +269,10 @@ class CrewMembershipViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None, *args, **kwargs):
         try:
             membership = CrewMembership.objects.get(pk=pk)
+            crew = Crew.objects.get(pk=membership.crew.id)
             membership.delete()
+            if crew.crew_membership.all().count() == 0:
+                crew.delete()
             return Response({'message': '크루에서 탈퇴했습니다.'}, status=status.HTTP_200_OK)
         except CrewMembership.DoesNotExist:
             return Response({'message': '크루 가입 이력이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
