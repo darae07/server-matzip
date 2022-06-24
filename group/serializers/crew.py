@@ -5,7 +5,9 @@ from common.costume_serializers import FullUserSerializer
 from group.constants import MembershipStatus
 from group.models_crew import CrewMembership, Crew, Lunch, Vote
 from group.serializers.team_member import TeamMemberSerializer
+from reviews.models import ReviewImage
 from stores.serializers.keword import KeywordSerializer
+from reviews.serializers.review import ReviewImageSerializer
 
 
 class VoteSerializer(serializers.ModelSerializer):
@@ -27,6 +29,16 @@ class LunchSerializer(serializers.ModelSerializer):
 class LunchListSerializer(LunchSerializer):
     keyword = KeywordSerializer(read_only=True, many=False)
     votes = VoteListSerializer(read_only=True, many=True)
+    image = serializers.SerializerMethodField('get_image')
+
+    def get_image(self, instance):
+        if not instance.keyword:
+            return None
+        image = ReviewImage.objects.filter(keyword=instance.keyword.id).order_by('-created_at').first()
+        if image:
+            serializer = ReviewImageSerializer(image, many=False)
+            return serializer.data
+        return None
 
 
 class CrewMembershipSerializer(serializers.ModelSerializer):
