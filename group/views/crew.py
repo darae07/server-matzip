@@ -312,7 +312,9 @@ class LunchViewSet(viewsets.ModelViewSet):
         return Response({'message': '점심을 생성했습니다.', **serializer.data})
 
     def list(self, request, *args, **kwargs):
-        page = self.paginate_queryset(self.queryset)
+        crew = self.request.query_params.get('crew')
+        queryset = self.queryset.filter(crew=crew)
+        page = self.paginate_queryset(queryset)
         serializer = LunchListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -350,19 +352,26 @@ class LunchViewSet(viewsets.ModelViewSet):
             lunch = Lunch.objects.get(pk=pk)
             if lunch.eat:
                 return Response({'message': '이미 먹은 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-            lunch.keyword.eat_count += 1
-            lunch.eat = True
-            lunch.save()
-            lunch.keyword.save()
-            data = request_data_handler(request.data, None, ['content'])
+            data = request_data_handler(request.data, None, ['content', 'score'])
             user = request.user
             team_member = TeamMember.objects.get_my_team_profile(user=user)
-            review = Review.objects.create(keyword=lunch.keyword.id, content=data['content'],
+            review = Review.objects.create(keyword=lunch.keyword.id, content=data['content'], score=data['score'],
                                            team_member=team_member.id)
             if request.FILES:
                 for image in request.FILES.getlist('image'):
                     review_image = ReviewImage.objects.create(review=review.id, image=image)
+                    review_image.keyword = lunch.keyword
+                    review_image.save()
+                    if not review_image:
+                        return Response({'message': '식사 리뷰를 등록할 수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
             serializer = LunchListSerializer(lunch)
+            now = datetime.datetime.now()
+            lunch.closed_at = now
+            lunch.keyword.eat_count += 1
+            lunch.eat = True
+            lunch.save()
+            lunch.keyword.save()
             return Response({'message': '점심을 먹었습니다.', **serializer.data}, status=status.HTTP_200_OK)
         except Lunch.DoesNotExist:
             return Response({'message': '점심을 찾을수 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -411,5 +420,17 @@ class VoteViewSet(viewsets.ModelViewSet):
             vote = Vote.objects.get(pk=pk)
             vote.delete()
             return Response({'message': '성공적으로 투표를 철회했습니다.'}, status=status.HTTP_200_OK)
+        except Vote.DoesNotExist:
+            return Response({'message': '투표 이력이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=False, methods=['DELETE'])
+    def out_by_lunch(self, request, *args, **kwargs):
+        user = request.user
+        team_member = TeamMember.objects.get_my_team_profile(user=user)
+        lunch = self.request.query_params.get('lunch')
+        try:
+            vote = Vote.objects.get(lunch=lunch, team_member=team_member)
+            vote.delete()
+            return Response({'message': '성공적으로 투표를 취소했습니다.'}, status=status.HTTP_200_OK)
         except Vote.DoesNotExist:
             return Response({'message': '투표 이력이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
