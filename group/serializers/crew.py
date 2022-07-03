@@ -34,7 +34,7 @@ class LunchListSerializer(LunchSerializer):
     def get_image(self, instance):
         if not instance.keyword:
             return None
-        image = ReviewImage.objects.filter(keyword=instance.keyword.id).order_by('-created_at').first()
+        image = ReviewImage.objects.filter(keyword=instance.keyword.id, review__score=5).order_by('-created_at').first()
         if image:
             serializer = ReviewImageSerializer(image, many=False)
             return serializer.data
