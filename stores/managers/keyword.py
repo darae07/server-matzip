@@ -8,12 +8,13 @@ class KeywordQuerySet(models.QuerySet):
 
 
 class KeywordManager(BaseManager.from_queryset(KeywordQuerySet)):
-    def hit_keyword(self, name, team, category):
+    def hit_keyword(self, name, use_kakaomap, use_team_location, team, category):
         keyword = self.get_queryset().get_keyword(name, team)
         if keyword:
             keyword.hit_count += 1
         else:
-            keyword = self.model(name=name, team=team, category=category, hit_count=1)
+            keyword = self.model(name=name, team=team, category=category, hit_count=1,
+                                 use_kakaomap=use_kakaomap, use_team_location=use_team_location )
         keyword.save()
         return keyword
 

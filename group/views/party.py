@@ -90,13 +90,16 @@ class PartyViewSet(viewsets.ModelViewSet):
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        data = request_data_handler(request.data, ['name', 'keyword'], ['description', 'category'])
+        data = request_data_handler(request.data, ['name', 'keyword'],
+                                    ['description', 'category', 'use_kakaomap', 'use_team_location'])
         if Party.objects.filter(team=team_member.team, name=data['name'], created_at__range=(today_min, today_max))\
                 .first():
             return Response({'message': '파티명이 사용중입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         category = Category.objects.filter(id=data['category']).first()
-        keyword = Keyword.objects.hit_keyword(name=data['keyword'], team=team_member.team, category=category)
+        keyword = Keyword.objects.hit_keyword(name=data['keyword'], use_kakaomap=data['use_kakaomap'],
+                                              use_team_location=data['use_team_location'],
+                                              team=team_member.team, category=category)
         data['team'] = team_member.team.id
         data['keyword'] = keyword.id
         serializer = self.get_serializer(data=data)

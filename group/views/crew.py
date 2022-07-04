@@ -298,9 +298,12 @@ class LunchViewSet(viewsets.ModelViewSet):
         if not team_member:
             return Response({'message': '팀 권한이 없습니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        data = request_data_handler(request.data, ['crew', 'keyword'], ['title', 'category'])
+        data = request_data_handler(request.data, ['crew', 'keyword']
+                                    , ['title', 'category', 'use_kakaomap', 'use_team_location'])
         category = Category.objects.filter(id=data['category']).first()
-        keyword = Keyword.objects.hit_keyword(name=data['keyword'], team=team_member.team, category=category)
+        keyword = Keyword.objects.hit_keyword(name=data['keyword'], use_kakaomap=data['use_kakaomap'],
+                                              use_team_location=data['use_team_location'],
+                                              team=team_member.team, category=category)
         same_lunch = self.queryset.filter(crew=data['crew'], keyword=keyword).first()
         if same_lunch:
             return Response({'message': '이미 있는 메뉴입니다.'}, status=status.HTTP_406_NOT_ACCEPTABLE)
