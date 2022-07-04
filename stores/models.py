@@ -49,6 +49,8 @@ class Keyword(models.Model):
     eat_count = models.IntegerField(default=0)
     good_count = models.IntegerField(default=0)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    use_kakaomap = models.BooleanField(default=True)
+    use_team_location = models.BooleanField(default=True)
 
     objects = KeywordManager()
 
