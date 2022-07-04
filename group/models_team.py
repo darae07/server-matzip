@@ -38,7 +38,7 @@ class TeamMember(models.Model):
     team = models.ForeignKey('group.Team', on_delete=models.CASCADE, null=True, blank=True, related_name='members')
     user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
                              related_name='team_membership')
-    member_name = models.CharField(max_length=100, blank=True, null=True)
+    member_name = models.CharField(max_length=100, default='')
     date_joined = models.DateTimeField(auto_now_add=True, blank=True)
     image = models.ImageField(upload_to=unique_path2, default='')
     title = models.CharField(max_length=6, blank=True, null=True)
