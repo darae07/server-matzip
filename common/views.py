@@ -31,6 +31,7 @@ from matzip.smtp import send_plain_mail, send_multipart_mail
 from .serializers import ResetPasswordCodeSerializer
 from datetime import datetime
 from rest_framework_simplejwt.tokens import RefreshToken
+from matzip.error_code import KAKAO_USERINFO_ERROR
 
 SITE_DOMAIN = os.environ.get('SITE_DOMAIN')
 KAKAO_CLIENT_ID = os.environ.get('KAKAO_ID')
@@ -248,13 +249,14 @@ def kakao_login_callback(request):
                                         )
         profile_json = profile_request.json()
         kakao_account = profile_json.get('kakao_account')
-        profile = kakao_account.get('profile')
+        profile = kakao_account.get('profile', None)
+        nickname = None
+        if profile:
+            nickname = profile.get('nickname', None)
 
-        nickname = profile.get('nickname', None)
         email = kakao_account.get('email', None)
         if email is None:
-            AlertException('카카오계정(이메일) 제공 동의에 체크해 주세요.')
-
+            return Response({'message': KAKAO_USERINFO_ERROR}, status=status.HTTP_406_NOT_ACCEPTABLE)
         try:
             user = CommonUser.objects.get(email=email)
         except CommonUser.DoesNotExist:
