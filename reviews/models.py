@@ -1,7 +1,6 @@
 from django.db import models
-from stores.models import Store, Keyword
+from stores.models import Keyword
 from common.models import CommonUser
-from stores.models import Category
 import uuid
 import os
 from .constants import LikeStatus
