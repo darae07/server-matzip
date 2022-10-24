@@ -1,94 +1,12 @@
-from django.db.models import Subquery, OuterRef, Q, F, Prefetch
 from rest_framework.decorators import action, permission_classes
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
-from .models import ReviewImage, Review, Comment, Like
-from group.models_team import TeamMember
-from rest_framework import viewsets, status, pagination
-from .serializer import ReviewImageSerializer, ReviewSerializer, ReviewListSerializer,\
-    ReviewRetrieveSerializer, CommentSerializer, CommentListSerializer, LikeInReviewListSerializer, LikeSerializer
-from django.contrib.gis.geos import Point
+from .models import ReviewImage, Comment, Like
+from rest_framework import viewsets, status
+from .serializer import ReviewImageSerializer, CommentSerializer, CommentListSerializer, \
+    LikeInReviewListSerializer, LikeSerializer
 from .constants import LikeStatus
-
-
-# Create your views here.
-class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
-    serializer_class = {
-        'list': ReviewListSerializer,
-        'retrieve': ReviewRetrieveSerializer
-    }
-    # pagination_class = PageNumberPagination
-    # pagination_class.page_size = 10
-    ordering = ['-created_at']
-    company = None
-
-    def get_serializer_context(self):
-        context = super(ReviewViewSet, self).get_serializer_context()
-        context.update({'request': self.request})
-        return context
-
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return self.serializer_class['retrieve']
-        return self.serializer_class['list']
-
-    def get_queryset(self):
-        queryset = Review.objects.all().order_by('-created_at')
-        return queryset
-
-    def list(self, request):
-        queryset = self.get_queryset()
-
-        # 같은 팀 멤버이거나, 공개설정된 리뷰만 조회 가능
-        team = self.request.query_params.get('team')
-        if team:
-            team_member = TeamMember.objects.filter(team=team)
-            team_member_user_id = team_member.values('user')
-            # queryset = queryset.prefetch_related(Prefetch('user__team_membership',
-            #                                               queryset=team_member,
-            #                                               to_attr='team_member'))
-
-            queryset = queryset.filter(Q(public=True) | Q(user__in=team_member_user_id))
-        else:
-            queryset = queryset.filter(Q(public=True))
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        data['user'] = request.user.id
-        lon = request.data.get('lon', None)
-        lat = request.data.get('lat', None)
-
-        if lon and lat:
-            data['location'] = Point(float(lon), float(lat))
-        serializer = ReviewSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-
-    def partial_update(self, request, pk, *args, **kwargs):
-        instance = Review.objects.get(pk=pk)
-        data = request.data
-        data['user'] = request.user.id
-        serializer = ReviewSerializer(instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(**serializer.validated_data)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    @permission_classes((IsAuthenticated,))
-    @action(detail=False, methods=['get'])
-    def favorite(self, request):
-        user = request.user
-        queryset = self.get_queryset()
-        queryset = queryset.filter(likes__user=user)
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
 
 
 class ReviewImageViewSet(viewsets.ModelViewSet):

@@ -63,28 +63,6 @@ class Invite(models.Model):
         return self.receiver.member_name
 
 
-class Company(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    location = PointField(srid=4326, geography=True, blank=True, null=True)
-    title = models.CharField(max_length=200, null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Contract(models.Model):
-    user = models.ForeignKey('common.CommonUser', on_delete=models.CASCADE, null=True, blank=True,
-                             related_name='contract')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True,
-                                related_name='members')
-    date_joined = models.DateTimeField(auto_now_add=True, blank=True)
-    team_name = models.CharField(max_length=100, null=True, blank=True)
-    my_name = models.CharField(max_length=50, null=True, blank=True)
-
-    def __str__(self):
-        return self.user.email
-
-
 class Tag(models.Model):
     party = models.ForeignKey('group.Party', on_delete=models.CASCADE, null=True, blank=True, related_name='tags')
     team_member = models.ForeignKey('group.TeamMember', on_delete=models.CASCADE, null=True, blank=True)

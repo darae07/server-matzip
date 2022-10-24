@@ -19,12 +19,10 @@ from matzip.handler import request_data_handler
 from .models import CommonUser, ResetPasswordCode
 from .costume_serializers import FullUserSerializer
 from .serializers import UserSerializer
-from group.models_team import Contract
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from django.contrib.sites.shortcuts import get_current_site
+from rest_framework.parsers import MultiPartParser, FormParser
 from dj_rest_auth import views
 from dj_rest_auth.serializers import JWTSerializer
 from matzip.smtp import send_plain_mail, send_multipart_mail
@@ -47,13 +45,6 @@ GOOGLE_STATE = os.environ.get('GOOGLE_STATE')
 class CommonUserViewSet(viewsets.ModelViewSet):
     queryset = CommonUser.objects.all()
     serializer_class = FullUserSerializer
-
-    def get_queryset(self):
-        company = self.request.query_params.get('company')
-        queryset = CommonUser.objects.prefetch_related(
-            Prefetch('contract', queryset=Contract.objects.filter(company=company))).order_by('-date_joined')
-
-        return queryset
 
     def partial_update(self, request, pk=None, *args, **kwargs):
         data = self.request.data
